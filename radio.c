@@ -7,7 +7,7 @@
 #include <inttypes.h>
 
 #include "radio.h"
-#include "radio_config_Si4362 no CRC.h"
+#include "radio_config.h"
 //#include "radio_config_Si4362 with CRC.h"
 #include "spi.h"
 
@@ -23,10 +23,13 @@
 #define SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
 #define NIRQ		BIT5	// 2.5 preamble, high when detected (for debug only, use sync word for actual package detection)
 
+#define	DATA_CLK_PIN	GPIO_2
+#define DATA_PIN		GPIO_3
+
 #define SYNC_WORD_DETECTED	(P2IN & GPIO_0)
 #define RADIO_READY			(P2IN & GPIO_1)
-#define RX_DATA_CLK			(P2IN & GPIO_2)
-#define RX_DATA				(P2IN & GPIO_3)
+#define RX_DATA_CLK			(P2IN & DATA_CLK_PIN)
+#define RX_DATA				(P2IN & DATA_PIN)
 #define PREAMBLE_DETECTED	(P2IN & NIRQ)
 #define CCA_DETECTED		(P2IN & NIRQ)
 
@@ -41,6 +44,7 @@
 #define CMD_GET_CHIP_STATUS			0x23
 #define CMD_START_RX				0x32
 #define CMD_REQUEST_DEVICE_STATE	0x33
+#define CMD_CHANGE_STATE			0x34
 #define CMD_READ_CMD_BUFF			0x44
 #define CMD_READ_RX_FIFO			0x77
 
@@ -54,14 +58,19 @@ int receive_result(uint8_t length);
 void radio_setup(void)
 {
 	// initialize SPI pins
+	P1SEL &= ~SPI_NSEL;								// NSEL pin as I/O
 	P1DIR |= SPI_NSEL;								// set NSEL pin to output
 	SPI_OFF;										// turn off chip select
 
 	spi_init();
 
 	// initialize GPIO pins
-	P2DIR &= ~(GPIO_0 | GPIO_1 | GPIO_2 | GPIO_3);	// all GPIO pins as input
-	P2DIR |= SDN;									// shutdown pin as output
+	P2SEL &= ~(GPIO_0 | GPIO_1 | GPIO_2 | GPIO_3);	// all GPIO pins are I/O
+	P2DIR &= ~(GPIO_0 | GPIO_1 | GPIO_2 | GPIO_3);	// all GPIO pins are input
+
+	// initialize shutdown pin
+	P2SEL &= ~SDN;									// shutdown pin is I/O
+	P2DIR |= SDN;									// shutdown pin is output
 
 	return;
 }
@@ -70,8 +79,7 @@ void radio_configure(void)
 {
 	// reset radio: SDN=1, wait >1us, SDN=0
 	P2OUT |= SDN;
-	int c = 1000;
-	while (c-- > 0);
+	_delay_cycles(1000);
 	P2OUT &= ~SDN;
 
 	while (!RADIO_READY);						// wait for chip to wake up
@@ -87,6 +95,49 @@ void radio_configure(void)
 	}
 
 	return;
+}
+
+void radio_start(void)
+{
+	// enable interrupt on positive edge of pin wired to DATA_CLK (GPIO2 as configured in radio_config.h)
+	P2IES &= ~DATA_CLK_PIN;
+	P2IE |= DATA_CLK_PIN;
+	_BIS_SR(GIE);      			// enable interrupts
+
+	// transition radio into receive state
+	radio_start_rx(0, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+}
+
+// interrupt handler for receiving data via DATA/DATA_CLK
+#pragma vector=PORT2_VECTOR
+__interrupt void radio_irq_handler(void)
+{
+	static uint8_t rx_prev_bit = 0;				// previous bit for NRZI decoding
+	static uint16_t rx_bitstream = 0;			// last 16 bits processed
+
+	uint8_t rx_this_bit, rx_bit;
+
+	if(P2IFG & DATA_CLK_PIN) {					// verify this interrupt is from DATA_CLK/GPIO_2 pin
+
+		if(P2IN & DATA_PIN)	{					// read bit and decode NRZI
+			rx_this_bit = 1;
+		} else {
+			rx_this_bit = 0;
+		}
+		rx_bit = !(rx_prev_bit^rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
+		rx_prev_bit = rx_this_bit;
+
+		rx_bitstream = (rx_bitstream << 1) + rx_bit;
+	}
+}
+
+void radio_stop(void)
+{
+	// disable interrupt on pin wired to GPIO2
+	P2IE &= ~DATA_CLK_PIN;
+
+	// transition radio from RX to READY
+	radio_change_state(RADIO_STATE_READY);
 }
 
 void radio_part_info(void)
@@ -302,6 +353,12 @@ uint16_t radio_receive_bitstream_nrzi(uint8_t sync_word)
 void radio_request_device_state(void)
 {
 	send_command(CMD_REQUEST_DEVICE_STATE, 0, 0, sizeof(radio_buffer.device_state));
+}
+
+void radio_change_state(uint8_t next_state)
+{
+	radio_buffer.data[0] = next_state;
+	send_command(CMD_CHANGE_STATE, radio_buffer.data, 1, 0);
 }
 
 uint8_t radio_read_rx_fifo(void)

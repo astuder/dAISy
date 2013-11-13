@@ -36,20 +36,20 @@ int main(void)
 		}
 	}
 
-	// put radio into receive mode (first parameter = channel)
-	radio_start_rx(0, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+	// start receiving
+	radio_start();
 
 	while (1) {
-		// to do: control logic
+		// TODO: control logic
 	}
 }
 
 // handler for unuxpected interrupts
-#pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,PORT2_VECTOR,	\
+#pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,	\
 			   TIMER0_A0_VECTOR,TIMER0_A1_VECTOR,TIMER1_A0_VECTOR,TIMER1_A1_VECTOR,		\
 			   USCIAB0RX_VECTOR,USCIAB0TX_VECTOR,WDT_VECTOR
 __interrupt void ISR_trap(void)
 {
-	// Trapping the CPU & code execution here with an infinite loop
+	// trap CPU & code execution here with an infinite loop
 	while (1);
 }

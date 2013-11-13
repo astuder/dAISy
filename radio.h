@@ -10,6 +10,10 @@
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
 void radio_configure(void);							// configure radio using radio_config_Si4362.h
 
+// functions to manage radio operation
+void radio_start(void);								// start receiving packages
+void radio_stop(void);								// stop receiving packages
+
 // helpers
 void radio_debug(void);								// debug code, reading chip status, version etc.
 uint16_t radio_receive_bitstream();						// receiving data from radio without packet handler, returns number of bit received
@@ -25,6 +29,9 @@ void radio_start_rx(								// switch modem to RX state
 					uint8_t rx_timeout_state,			// next state when no preamble is detected
 					uint8_t rx_valid_state,				// next state when valid packet is received
 					uint8_t rx_invalid_state);			// next state when invalid packet is received (CRC error)
+
+void radio_change_state(							// change state of radio, e.g. to READY from RX
+					uint8_t next_state);				// target state
 
 void radio_fifo_info(								// read FIFO information, like pending bytes, result in radio_buffer.fifo_info
 					uint8_t reset_reset_fifo);			// if 2, RX FIFO will be reset
