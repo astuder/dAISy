@@ -11,27 +11,20 @@
 //#include "radio_config_Si4362 with CRC.h"
 #include "spi.h"
 
-#define	SPI_NSEL	BIT4	// chip select pin 1.4
-
+#define	SPI_NSEL	BIT4						// chip select on pin 1.4
 #define SPI_ON		P1OUT &= ~SPI_NSEL;			// turn SPI on (NSEL=0)
 #define SPI_OFF		P1OUT |= SPI_NSEL;			// turn SPI off (NSEL=1)
 
-#define GPIO_0		BIT0	// 2.0 sync word, high when detected
-#define GPIO_1		BIT1	// 2.1 CTS, when low, chip is busy/not ready (default)
-#define GPIO_2		BIT2	// 2.2 RX data clock
-#define GPIO_3		BIT3	// 2.3 RX data
+#define GPIO_0		BIT0	// 2.0 configurable, e.g. sync word, high when detected
+#define GPIO_1		BIT1	// 2.1 configurable, default is CTS - this library relies on this!
+#define GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
+#define GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
 #define SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
-#define NIRQ		BIT5	// 2.5 preamble, high when detected (for debug only, use sync word for actual package detection)
+#define NIRQ		BIT5	// 2.5 condifurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
 
-#define	DATA_CLK_PIN	GPIO_2
-#define DATA_PIN		GPIO_3
+#define CTS			GPIO_1	// when low, chip is busy/not ready
 
-#define SYNC_WORD_DETECTED	(P2IN & GPIO_0)
-#define RADIO_READY			(P2IN & GPIO_1)
-#define RX_DATA_CLK			(P2IN & DATA_CLK_PIN)
-#define RX_DATA				(P2IN & DATA_PIN)
-#define PREAMBLE_DETECTED	(P2IN & NIRQ)
-#define CCA_DETECTED		(P2IN & NIRQ)
+#define RADIO_READY			(P2IN & CTS)
 
 #define CMD_NOP						0x00
 #define CMD_PART_INFO				0x01
@@ -64,9 +57,9 @@ void radio_setup(void)
 
 	spi_init();
 
-	// initialize GPIO pins
-	P2SEL &= ~(GPIO_0 | GPIO_1 | GPIO_2 | GPIO_3);	// all GPIO pins are I/O
-	P2DIR &= ~(GPIO_0 | GPIO_1 | GPIO_2 | GPIO_3);	// all GPIO pins are input
+	// initialize CTS pin as input
+	P2SEL &= ~(CTS);
+	P2DIR &= ~(CTS);
 
 	// initialize shutdown pin
 	P2SEL &= ~SDN;									// shutdown pin is I/O
@@ -95,49 +88,6 @@ void radio_configure(void)
 	}
 
 	return;
-}
-
-void radio_start(void)
-{
-	// enable interrupt on positive edge of pin wired to DATA_CLK (GPIO2 as configured in radio_config.h)
-	P2IES &= ~DATA_CLK_PIN;
-	P2IE |= DATA_CLK_PIN;
-	_BIS_SR(GIE);      			// enable interrupts
-
-	// transition radio into receive state
-	radio_start_rx(0, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
-}
-
-// interrupt handler for receiving data via DATA/DATA_CLK
-#pragma vector=PORT2_VECTOR
-__interrupt void radio_irq_handler(void)
-{
-	static uint8_t rx_prev_bit = 0;				// previous bit for NRZI decoding
-	static uint16_t rx_bitstream = 0;			// last 16 bits processed
-
-	uint8_t rx_this_bit, rx_bit;
-
-	if(P2IFG & DATA_CLK_PIN) {					// verify this interrupt is from DATA_CLK/GPIO_2 pin
-
-		if(P2IN & DATA_PIN)	{					// read bit and decode NRZI
-			rx_this_bit = 1;
-		} else {
-			rx_this_bit = 0;
-		}
-		rx_bit = !(rx_prev_bit^rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
-		rx_prev_bit = rx_this_bit;
-
-		rx_bitstream = (rx_bitstream << 1) + rx_bit;
-	}
-}
-
-void radio_stop(void)
-{
-	// disable interrupt on pin wired to GPIO2
-	P2IE &= ~DATA_CLK_PIN;
-
-	// transition radio from RX to READY
-	radio_change_state(RADIO_STATE_READY);
 }
 
 void radio_part_info(void)
@@ -192,162 +142,6 @@ void radio_start_rx(uint8_t channel, uint8_t start_condition, uint16_t rx_length
 	radio_buffer.data[5] = rx_valid_state;
 	radio_buffer.data[6] = rx_invalid_state;
 	send_command(CMD_START_RX, radio_buffer.data, 7, 0);
-}
-
-uint16_t radio_receive_bitstream(void)
-{
-	while(!SYNC_WORD_DETECTED)			// wait for sync word, or radio to exit receive mode
-	{
-/* don't check radio state as this will take too much time!
-		radio_request_device_state();
-		if((radio_buffer.device_state.curr_state != RADIO_STATE_RX) && (radio_buffer.device_state.curr_state != RADIO_STATE_TUNE_RX))
-		{
-			return 0;					// radio no longer ready to receive
-		}
-*/
-	};
-
-	uint16_t c = 0;						// counting number of bits received
-	uint16_t i = 0;						// index in receive buffer
-	uint8_t d = 0;						// currently received data byte
-
-	while(SYNC_WORD_DETECTED) {			// while modem indicates sync
-		while(RX_DATA_CLK);				// wait for clock to be 0
-		while(!RX_DATA_CLK);			// wait for positive clock edge
-
-		d <<= 1;						// shift bit into data byte
-		if(RX_DATA)	{
-			d |= 0x01;
-		}
-
-		c++;							// counting bits
-
-		if((c & 0x07) == 0)	{			// store full bytes in receive buffer
-			radio_buffer.data[i] = d;
-			i++;
-			d = 0;
-		}
-	}
-
-	if((c & 0x07) != 0) {				// store remaining bits in receive buffer
-		radio_buffer.data[i] = d;
-	}
-
-	return c;
-}
-
-uint16_t radio_receive_bitstream_nrzi(uint8_t sync_word)
-{
-	while(!CCA_DETECTED);			// wait for RSSI threshold to be exceeded
-
-	uint16_t shiftreg = 0;
-	uint8_t prevbit = 0;
-	uint8_t thisbit = 0;
-	uint16_t c;						// counting number of bits received
-	uint16_t i = 0;						// index in receive buffer
-
-	do {
-			while(RX_DATA_CLK && CCA_DETECTED);				// wait for clock to be 0
-			while(!RX_DATA_CLK && CCA_DETECTED);			// wait for positive clock edge
-
-			if(!CCA_DETECTED) {
-				return 0;
-			}
-
-			shiftreg >>= 1;
-
-			if(RX_DATA)	{
-				thisbit = 1;
-			} else {
-				thisbit = 0;
-			}
-
-			if(thisbit == prevbit) {
-				shiftreg |= 0x8000;
-			}
-			else
-			{
-				shiftreg &= 0x7fff;
-			}
-
-			prevbit = thisbit;
-
-	} while (shiftreg != 0x5555);
-
-	c = 24;
-
-	do {
-		while(RX_DATA_CLK && CCA_DETECTED);				// wait for clock to be 0
-		while(!RX_DATA_CLK && CCA_DETECTED);			// wait for positive clock edge
-
-		shiftreg >>= 1;
-
-		if(RX_DATA)	{
-			thisbit = 1;
-		} else {
-			thisbit = 0;
-		}
-
-		if(thisbit == prevbit) {
-			shiftreg |= 0x8000;
-		}
-		else
-		{
-			shiftreg &= 0x7fff;
-		}
-
-		prevbit = thisbit;
-
-		c--;
-	} while ((((shiftreg >> 8) & 0xff) != sync_word) && (c != 0));
-
-	if(c == 0) {
-		return 0;
-	}
-
-	c = 0;
-
-	do {
-		while(RX_DATA_CLK && CCA_DETECTED);				// wait for clock to be 0
-		while(!RX_DATA_CLK && CCA_DETECTED);			// wait for positive clock edge
-
-		shiftreg >>= 1;						// shift bit into data byte
-
-		if(RX_DATA)	{
-			thisbit = 1;
-		} else {
-			thisbit = 0;
-		}
-
-		if(thisbit == prevbit) {
-			shiftreg |= 0x8000;
-		}
-		else
-		{
-			shiftreg &= 0x7fff;
-		}
-
-		prevbit = thisbit;
-
-		c++;							// counting bits
-
-		if((c & 0x07) == 0)	{			// store full bytes in receive buffer
-			radio_buffer.data[i] = shiftreg >> 8;
-			i++;
-		}
-
-	} while ((shiftreg >> 8) != sync_word && i < 0x1b && (CCA_DETECTED));
-
-	if ((shiftreg >> 8) != sync_word)
-	{
-		return 0;
-	}
-
-	if((c & 0x07) != 0) {				// store remaining bits in receive buffer
-		radio_buffer.data[i] = shiftreg >> 8;
-	}
-
-	return c;
 }
 
 void radio_request_device_state(void)

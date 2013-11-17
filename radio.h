@@ -10,14 +10,8 @@
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
 void radio_configure(void);							// configure radio using radio_config_Si4362.h
 
-// functions to manage radio operation
-void radio_start(void);								// start receiving packages
-void radio_stop(void);								// stop receiving packages
-
 // helpers
 void radio_debug(void);								// debug code, reading chip status, version etc.
-uint16_t radio_receive_bitstream();						// receiving data from radio without packet handler, returns number of bit received
-uint16_t radio_receive_bitstream_nrzi(uint8_t sync_word);	// receiving NRZI encoded data from radio without packet handler, returns number of bit received
 
 // wrappers for chip functionality, see EZRadioPRO API Documentation for detailed information
 // http://www.silabs.com/products/wireless/ezradiopro/pages/si4362.aspx

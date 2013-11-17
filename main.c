@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "radio.h"
+#include "packet_handler.h"
 
 #define LED1	BIT0
 
@@ -23,8 +24,11 @@ int main(void)
 	P1DIR |= LED1;
 	LED_OFF;
 
-	// configure radio
+	// set packet handler and radio
+	ph_setup();
 	radio_setup();
+
+	// configure radio
 	radio_configure();
 
 	// verify that configuration was successful
@@ -37,7 +41,7 @@ int main(void)
 	}
 
 	// start receiving
-	radio_start();
+	ph_start();
 
 	while (1) {
 		// TODO: control logic
