@@ -12,6 +12,16 @@
 // sync word for AIS
 #define AIS_SYNC_WORD		0x7e
 
+// packet handler receiver states
+enum PH_STATE {
+	PH_STATE_OFF = 0,
+	PH_STATE_INIT,
+	PH_STATE_WAIT_FOR_PREAMBLE,
+	PH_STATE_WAIT_FOR_START,
+	PH_STATE_RECEIVE_START,
+	PH_STATE_RECEIVE_PACKET
+};
+
 // pins that packet handler uses to receive data
 #define	PH_DATA_CLK_PIN		BIT2	// 2.2 RX data clock
 #define PH_DATA_PIN			BIT3	// 2.3 RX data
@@ -40,6 +50,8 @@
 #error "Packet handler only supports port 1 and 2."
 #endif
 
+volatile uint8_t ph_state = PH_STATE_OFF;
+
 void ph_setup(void)
 {
 	// configure data pins as inputs
@@ -58,6 +70,9 @@ void ph_start(void)
 #ifndef TEST
 	radio_start_rx(0, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
 #endif
+
+	// reset packet handler state machine
+	ph_state = PH_STATE_INIT;
 }
 
 // interrupt handler for receiving data via DATA/DATA_CLK
@@ -65,7 +80,10 @@ void ph_start(void)
 __interrupt void ph_irq_handler(void)
 {
 	static uint8_t rx_prev_bit = 0;				// previous bit for NRZI decoding
-	static uint16_t rx_bitstream = 0;			// last 16 bits processed
+	static uint16_t rx_bitstream = 0;			// shift register with incoming data
+	static uint16_t rx_bit_count = 0;			// bit counter for various purposes
+	static uint8_t rx_one_count = 0;			// counter of 1's to identify stuff bits
+	static uint8_t rx_data_byte = 0;			// byte to receive actual package data
 
 	uint8_t rx_this_bit, rx_bit;
 
@@ -79,10 +97,84 @@ __interrupt void ph_irq_handler(void)
 		rx_bit = !(rx_prev_bit^rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
 		rx_prev_bit = rx_this_bit;
 
-		rx_bitstream >>= 1;						// add bit to bitstream (receiving LSB first)
+		rx_bitstream >>= 1;						// add bit to bit-stream (receiving LSB first)
 		if(rx_bit)
 		{
 			rx_bitstream |= 0x8000;
+		}
+
+		switch(ph_state) {
+		case PH_STATE_OFF:									// state: off, do nothing
+			break;
+
+		case PH_STATE_INIT:									// state: initialize
+			rx_bitstream = 0;								// reset bit-stream
+			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
+			break;
+
+		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 16 bit of training sequence
+			if(rx_bitstream == 0x5555) {					// look for 16 alternating bits
+				rx_bit_count = 0;							// reset bit counter
+				ph_state = PH_STATE_WAIT_FOR_START;			// next state: wait for start flag
+			}
+			break;
+
+		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
+			if((rx_bitstream & 0xff00) == 0x7e00) {			// if we found the start flag
+				rx_bit_count = 0;							// reset bit counter
+				ph_state = PH_STATE_RECEIVE_START;			// next state: start receiving packet
+				break;
+			}
+
+			rx_bit_count++;									// increase bit counter
+			if(rx_bit_count > 24) ph_state = PH_STATE_INIT;	// if start flag was not found within 24 bit reset state machine
+			break;
+
+		case PH_STATE_RECEIVE_START:						// state: pre-fill receive buffer with 8 bits
+			rx_bit_count++;									// increase bit counter
+			if(rx_bit_count == 8) {							// after 8 bits arrived
+				rx_bit_count = 0;							// reset bit counter
+				rx_one_count = 0;							// reset counter for stuff bits
+				rx_data_byte = 0;							// reset buffer for data byte
+				ph_state = PH_STATE_RECEIVE_PACKET;			// next state: receive and process packet
+				break;
+			}
+
+			break;											// do nothing for the first 8 bits to fill buffer
+
+		case PH_STATE_RECEIVE_PACKET:						// state: receiving packet data
+			rx_bit = rx_bitstream & 0x80;					// extract data bit for processing
+
+			if(rx_one_count == 5) {							// if we expect a stuff-bit..
+				if(rx_bit) ph_state = PH_STATE_INIT;		// if stuff bit is not zero the packet is invalid
+				else rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
+				break;
+			}
+
+			rx_data_byte = rx_data_byte >> 1 | rx_bit;		// shift bit into current data byte
+			if(rx_bit) rx_one_count++;						// count 1's to identify stuff bit
+			else rx_one_count = 0;							// or reset stuff-bit counter
+
+			if((rx_bit_count & 0x07)==0x07)	{				// every 8th bit.. (counter started at 0)
+				// TODO: store byte in packet buffer
+				rx_data_byte = 0;
+			}
+
+			rx_bit_count++;									// count valid, de-stuffed data bits
+
+			if((rx_bitstream & 0xff00) == 0x7e00) {			// check if we found the end flag 0x7e
+				// TODO: verify CRC
+				// TODO: process completed AIS packet
+				ph_state = PH_STATE_INIT;					// reset state machine
+				break;
+			}
+
+			if(rx_bit_count > 1020)	{						// if packet is too long, it's probably invalid
+				ph_state = PH_STATE_INIT;					// reset state machine
+				break;
+			}
+
+			break;
 		}
 	}
 
