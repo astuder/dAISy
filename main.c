@@ -10,6 +10,10 @@
 #define LED_OFF 	P1OUT &= ~LED1
 #define LED_TOGGLE	P1OUT ^= LED1
 
+#ifdef TEST
+void test_main(void);
+#endif
+
 int main(void)
 {
 	// configure WDT
@@ -20,18 +24,24 @@ int main(void)
 	DCOCTL = CALDCO_16MHZ;
 	BCSCTL2 = 0;							// MCLK and SMCLK = DCO = 16MHz
 
+#ifdef TEST
+	// when compiled in test mode, use different main
+	// disconnect radio when testing to avoid damage!
+	test_main();
+#endif
+
 	// configure LED1 and turn it off, we'll use that for error and other stuff
 	P1DIR |= LED1;
 	LED_OFF;
 
-	// set packet handler and radio
+	// setup packet handler
 	ph_setup();
-	radio_setup();
 
-	// configure radio
+	// setup an configure radio
+	radio_setup();
 	radio_configure();
 
-	// verify that configuration was successful
+	// verify that radio configuration was successful
 	radio_get_chip_status(0);
 	if (radio_buffer.chip_status.chip_status & RADIO_CMD_ERROR) {	// check for command error
 		while (1) {
@@ -40,13 +50,41 @@ int main(void)
 		}
 	}
 
-	// start receiving
+	// start packet receiving
 	ph_start();
 
 	while (1) {
 		// TODO: control logic
 	}
 }
+
+#ifdef TEST
+// AIS test messages, more samples see http://www.aishub.net/nmea-sample.html
+const char* test_message_0 = "14eG;o@034o8sd<L9i:a;WF>062D";
+const char* test_message_1 = "13u?etPv2;0n:dDPwUM1U1Cb069D";
+const char* test_message_2 = "15MgK45P3@G?fl0E`JbR0OwT0@MS";
+
+void test_main(void)
+{
+	// setup packet handler
+	ph_setup();
+	test_ph_setup();
+
+	// start packet receiving
+	ph_start();
+
+	while(1)
+	{
+		// Send fake AIS messages
+		_delay_cycles(1000000);
+		test_ph_send_packet(test_message_0);
+		_delay_cycles(1000000);
+		test_ph_send_packet(test_message_1);
+		_delay_cycles(1000000);
+		test_ph_send_packet(test_message_2);
+	}
+}
+#endif
 
 // handler for unuxpected interrupts
 #pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,	\
