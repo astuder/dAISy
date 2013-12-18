@@ -12,6 +12,7 @@
 
 #ifdef TEST
 void test_main(void);
+void test_error(void);
 #endif
 
 int main(void)
@@ -73,18 +74,33 @@ void test_main(void)
 	// start packet receiving
 	ph_start();
 
-	while(1)
-	{
+	while (1) {
 		// Send fake AIS messages
 		_delay_cycles(1000000);
 		test_ph_send_packet(test_message_0);
+		if (ph_get_last_error() != PH_ERROR_NONE)
+			test_error();
+
 		_delay_cycles(1000000);
 		test_ph_send_packet(test_message_1);
+		if (ph_get_last_error() != PH_ERROR_NONE)
+			test_error();
+
 		_delay_cycles(1000000);
 		test_ph_send_packet(test_message_2);
+		if (ph_get_last_error() != PH_ERROR_NONE)
+			test_error();
 	}
 }
 #endif
+
+void test_error()
+{
+	while (1) {
+		LED_TOGGLE;
+		_delay_cycles(8000000);			// blink LED if there was an error
+	}
+}
 
 // handler for unuxpected interrupts
 #pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,	\

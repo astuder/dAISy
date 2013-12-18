@@ -12,16 +12,6 @@
 // sync word for AIS
 #define AIS_SYNC_WORD		0x7e
 
-// packet handler receiver states
-enum PH_STATE {
-	PH_STATE_OFF = 0,
-	PH_STATE_INIT,
-	PH_STATE_WAIT_FOR_PREAMBLE,
-	PH_STATE_WAIT_FOR_START,
-	PH_STATE_RECEIVE_START,
-	PH_STATE_RECEIVE_PACKET
-};
-
 // pins that packet handler uses to receive data
 #define	PH_DATA_CLK_PIN		BIT2	// 2.2 RX data clock
 #define PH_DATA_PIN			BIT3	// 2.3 RX data
@@ -51,6 +41,7 @@ enum PH_STATE {
 #endif
 
 volatile uint8_t ph_state = PH_STATE_OFF;
+volatile uint8_t ph_last_error = PH_ERROR_NONE;
 
 void ph_setup(void)
 {
@@ -72,6 +63,7 @@ void ph_start(void)
 #endif
 
 	// reset packet handler state machine
+	ph_last_error = PH_ERROR_NONE;
 	ph_state = PH_STATE_INIT;
 }
 
@@ -79,31 +71,32 @@ void ph_start(void)
 #pragma vector=PH_DATA_PORT_VECTOR
 __interrupt void ph_irq_handler(void)
 {
-	static uint8_t rx_prev_bit = 0;				// previous bit for NRZI decoding
-	static uint16_t rx_bitstream = 0;			// shift register with incoming data
-	static uint16_t rx_bit_count = 0;			// bit counter for various purposes
-	static uint8_t rx_one_count = 0;			// counter of 1's to identify stuff bits
-	static uint8_t rx_data_byte = 0;			// byte to receive actual package data
+	static uint16_t rx_prev_bit;				// previous bit for NRZI decoding
+	static uint16_t rx_bitstream;				// shift register with incoming data
+	static uint16_t rx_bit_count;				// bit counter for various purposes
+	static uint8_t rx_one_count;				// counter of 1's to identify stuff bits
+	static uint8_t rx_data_byte;				// byte to receive actual package data
+	static uint16_t rx_crc;						// word for CRC calculation
 
-	uint8_t rx_this_bit, rx_bit;
+	uint16_t rx_this_bit, rx_bit;
 
-	if(PH_DATA_IFG & PH_DATA_CLK_PIN) {			// verify this interrupt is from DATA_CLK/GPIO_2 pin
+	if (PH_DATA_IFG & PH_DATA_CLK_PIN) {		// verify this interrupt is from DATA_CLK/GPIO_2 pin
 
-		if(PH_DATA_IN & PH_DATA_PIN)	{		// read bit and decode NRZI
+		if (PH_DATA_IN & PH_DATA_PIN)	{		// read bit and decode NRZI
 			rx_this_bit = 1;
 		} else {
 			rx_this_bit = 0;
 		}
-		rx_bit = !(rx_prev_bit^rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
+		rx_bit = !(rx_prev_bit ^ rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
 		rx_prev_bit = rx_this_bit;
 
 		rx_bitstream >>= 1;						// add bit to bit-stream (receiving LSB first)
-		if(rx_bit)
+		if (rx_bit)
 		{
 			rx_bitstream |= 0x8000;
 		}
 
-		switch(ph_state) {
+		switch (ph_state) {
 		case PH_STATE_OFF:									// state: off, do nothing
 			break;
 
@@ -113,29 +106,33 @@ __interrupt void ph_irq_handler(void)
 			break;
 
 		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 16 bit of training sequence
-			if(rx_bitstream == 0x5555) {					// look for 16 alternating bits
+			if (rx_bitstream == 0x5555) {					// look for 16 alternating bits
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_WAIT_FOR_START;			// next state: wait for start flag
 			}
 			break;
 
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
-			if((rx_bitstream & 0xff00) == 0x7e00) {			// if we found the start flag
+			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the start flag
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_RECEIVE_START;			// next state: start receiving packet
 				break;
 			}
 
 			rx_bit_count++;									// increase bit counter
-			if(rx_bit_count > 24) ph_state = PH_STATE_INIT;	// if start flag was not found within 24 bit reset state machine
+			if (rx_bit_count > 24) {						// if start flag was not found within 24 bit of preamble
+				ph_last_error = PH_ERROR_NOSTART;			// report missing start flag error
+				ph_state = PH_STATE_INIT;					// reset state machine
+			}
 			break;
 
 		case PH_STATE_RECEIVE_START:						// state: pre-fill receive buffer with 8 bits
 			rx_bit_count++;									// increase bit counter
-			if(rx_bit_count == 8) {							// after 8 bits arrived
+			if (rx_bit_count == 8) {						// after 8 bits arrived
 				rx_bit_count = 0;							// reset bit counter
 				rx_one_count = 0;							// reset counter for stuff bits
 				rx_data_byte = 0;							// reset buffer for data byte
+				rx_crc = 0xffff;							// init CRC calculation
 				ph_state = PH_STATE_RECEIVE_PACKET;			// next state: receive and process packet
 				break;
 			}
@@ -145,31 +142,49 @@ __interrupt void ph_irq_handler(void)
 		case PH_STATE_RECEIVE_PACKET:						// state: receiving packet data
 			rx_bit = rx_bitstream & 0x80;					// extract data bit for processing
 
-			if(rx_one_count == 5) {							// if we expect a stuff-bit..
-				if(rx_bit) ph_state = PH_STATE_INIT;		// if stuff bit is not zero the packet is invalid
-				else rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
+			if (rx_one_count == 5) {						// if we expect a stuff-bit..
+				if (rx_bit) {								// if stuff bit is not zero the packet is invalid
+					ph_last_error = PH_ERROR_STUFFBIT;		// report invalid stuff-bit error
+					ph_state = PH_STATE_INIT;				// restart
+				}
+				else
+					rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
 				break;
 			}
 
 			rx_data_byte = rx_data_byte >> 1 | rx_bit;		// shift bit into current data byte
-			if(rx_bit) rx_one_count++;						// count 1's to identify stuff bit
+
+			if (rx_bit) {
+				rx_one_count++;								// count 1's to identify stuff bit
+				rx_bit = 1;									// avoid shifting for CRC
+			}
 			else rx_one_count = 0;							// or reset stuff-bit counter
 
-			if((rx_bit_count & 0x07)==0x07)	{				// every 8th bit.. (counter started at 0)
+			if (rx_bit ^ (rx_crc & 0x0001))					// CCITT CRC calculation (according to Dr. Dobbs)
+				rx_crc = (rx_crc >> 1) ^ 0x8408;
+			else
+				rx_crc >>= 1;
+
+			if ((rx_bit_count & 0x07)==0x07) {				// every 8th bit.. (counter started at 0)
 				// TODO: store byte in packet buffer
 				rx_data_byte = 0;
 			}
 
 			rx_bit_count++;									// count valid, de-stuffed data bits
 
-			if((rx_bitstream & 0xff00) == 0x7e00) {			// check if we found the end flag 0x7e
-				// TODO: verify CRC
+			if ((rx_bitstream & 0xff00) == 0x7e00) {			// if we found the end flag 0x7e we're done
+				if (rx_crc != 0xf0b8) {						// if CRC verification failed
+					ph_last_error = PH_ERROR_CRC;			// report CRC error
+					ph_state = PH_STATE_INIT;				// restart
+					break;
+				}
 				// TODO: process completed AIS packet
 				ph_state = PH_STATE_INIT;					// reset state machine
 				break;
 			}
 
-			if(rx_bit_count > 1020)	{						// if packet is too long, it's probably invalid
+			if (rx_bit_count > 1020) {						// if packet is too long, it's probably invalid
+				ph_last_error = PH_ERROR_NOEND;				// report error
 				ph_state = PH_STATE_INIT;					// reset state machine
 				break;
 			}
@@ -190,6 +205,16 @@ void ph_stop(void)
 	radio_change_state(RADIO_STATE_READY);
 }
 
+int ph_get_state(void)
+{
+	return ph_state;
+}
+
+int ph_get_last_error(void)
+{
+	return ph_last_error;
+}
+
 #ifdef TEST
 void test_ph_setup(void)
 {
@@ -204,9 +229,8 @@ void test_ph_send_bit_nrzi(uint8_t tx_bit)
 	PH_DATA_OUT &= ~PH_DATA_CLK_PIN;
 
 	// NRZI = toggle data pin for sending 0, keep state for sending 1
-	if(tx_bit == 0) {
+	if (tx_bit == 0)
 		PH_DATA_OUT ^= PH_DATA_PIN;
-	}
 
 	// wait a while to roughly simulate 9600 baud @16Mhz
 	_delay_cycles(800);
@@ -225,7 +249,9 @@ void test_ph_send_packet(const char* buffer)
 
 	uint8_t tx_bit = 0;
 	uint8_t tx_byte;
+	uint16_t tx_crc = 0xffff;
 	uint8_t asc_byte;
+
 	unsigned int asc_bit_count;
 	unsigned int tx_bit_count;
 	unsigned int one_count;
@@ -235,14 +261,14 @@ void test_ph_send_packet(const char* buffer)
 
 
 	// send preamble, up to 24 bits
-	for(i=20; i!=0; i--) {
+	for (i = 20; i != 0; i--) {
 		test_ph_send_bit_nrzi(tx_bit);
 		tx_bit ^= 1;
 	}
 
 	// send sync word
 	tx_byte = AIS_SYNC_WORD;
-	for(i=8; i!=0; i--) {
+	for (i = 8; i != 0; i--) {
 		if(tx_byte & 0x01) {
 			test_ph_send_bit_nrzi(1);
 		} else {
@@ -258,14 +284,15 @@ void test_ph_send_packet(const char* buffer)
 	tx_bit_count = 0;
 	tx_byte = 0;
 	j = 0;
-	while(buffer[j]) {
+	while (buffer[j]) {
 		// (re)fill transmission byte with next 8 bits
-		while(tx_bit_count != 8) {
-			if(asc_bit_count == 0) {
+		while (tx_bit_count != 8) {
+			if (asc_bit_count == 0) {
 				// fetch next character and convert to 6-bit binary
-				if(buffer[j]) {
+				if (buffer[j]) {
 					asc_byte = buffer[j] - 48;
-					if(asc_byte > 40) asc_byte -= 6;
+					if (asc_byte > 40)
+						asc_byte -= 6;
 					asc_bit_count = 6;
 					j++;
 				} else {
@@ -276,43 +303,66 @@ void test_ph_send_packet(const char* buffer)
 
 			// shift new ascii bit into transmission byte
 			tx_byte <<= 1;
-			if(asc_byte & 0x20) tx_byte |= 0x01;
+			if (asc_byte & 0x20)
+				tx_byte |= 0x01;
 			tx_bit_count++;
 			asc_byte <<= 1;
 			asc_bit_count--;
 		}
 
 		// send bits, LSB first
-		while(tx_bit_count != 0) {
-			if(tx_byte & 0x01) {
+		while (tx_bit_count != 0) {
+			if (tx_byte & 0x01) {
 				test_ph_send_bit_nrzi(1);
 				one_count++;
 			} else {
 				test_ph_send_bit_nrzi(0);
 				one_count = 0;
 			}
+
+			if ((tx_byte & 0x01) ^ (tx_crc & 0x0001)) 				// CCITT CRC calculation (according to Dr. Dobbs)
+				tx_crc = (tx_crc >> 1) ^ 0x8408;
+			else
+				tx_crc >>= 1;
+
 			tx_byte >>= 1;
 			tx_bit_count--;
 
 			// stuff with 0 after five consecutive 1's
-			if(one_count == 5)
-			{
+			if (one_count == 5) {
 				test_ph_send_bit_nrzi(0);
 				one_count = 0;
 			}
 		}
 	};
 
-	// TODO: send CRC
+	// finish calculation of CRC and send CRC LSB first
+	tx_crc = ~tx_crc;
+//	tx_crc = (tx_crc << 8) | (tx_crc >> 8 & 0xff);			// no byte swap required as we send big-endian
+	for (i = 16; i != 0; i--) {
+		if (tx_crc & 0x01) {
+			test_ph_send_bit_nrzi(1);
+			one_count++;
+		} else {
+			test_ph_send_bit_nrzi(0);
+			one_count = 0;
+		}
+		tx_crc >>= 1;
+
+		// stuff with 0 after five consecutive 1's
+		if (one_count == 5) {
+			test_ph_send_bit_nrzi(0);
+			one_count = 0;
+		}
+	}
 
 	// send sync word
 	tx_byte = AIS_SYNC_WORD;
-	for(i=8; i!=0; i--) {
-		if(tx_byte & 0x01) {
+	for (i = 8; i != 0; i--) {
+		if (tx_byte & 0x01)
 			test_ph_send_bit_nrzi(1);
-		} else {
+		else
 			test_ph_send_bit_nrzi(0);
-		}
 		tx_byte >>= 1;
 	}
 }
