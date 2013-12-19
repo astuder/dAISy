@@ -30,8 +30,8 @@ enum PH_ERROR {
 	PH_ERROR_NOEND			// no end flag after more than 1020 bits, message too long
 };
 
-int ph_get_state(void);			// get current state of packet handler
-int ph_get_last_error(void);	// get last packet handler error
+uint8_t ph_get_state(void);			// get current state of packet handler
+uint8_t ph_get_last_error(void);	// get last packet handler error
 
 // functions to test packet handler operation, DISCONNECT MODEM BEFORE TESTING!
 #ifdef TEST

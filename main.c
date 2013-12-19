@@ -57,7 +57,19 @@ int main(void)
 	ph_start();
 
 	while (1) {
-		// TODO: control logic
+		uint8_t error = ph_get_last_error();
+		if(error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)
+		{
+			LED_TOGGLE;
+		}
+		uint8_t state = ph_get_state();
+		uint16_t size = fifo_get_packet();
+
+		if(size > 0)	// if a new packet arrived
+		{
+			// TODO: process packet, e.g. create NMEA message
+			fifo_remove_packet();
+		}
 	}
 }
 
@@ -85,7 +97,6 @@ void test_main(void)
 		test_packet_handler(test_message_2);
 	}
 }
-#endif
 
 uint8_t out_buffer[32];		// max message size = 256 bit, typical AIS message is 168+16 bit
 
@@ -112,13 +123,15 @@ void test_packet_handler(const char* message)
 	fifo_remove_packet();
 }
 
-void test_error()
+void test_error(void)
 {
 	while (1) {
 		LED_TOGGLE;
 		_delay_cycles(8000000);			// blink LED if there was an error
 	}
 }
+
+#endif
 
 // handler for unuxpected interrupts
 #pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,	\

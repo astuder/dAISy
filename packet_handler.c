@@ -208,12 +208,12 @@ void ph_stop(void)
 	radio_change_state(RADIO_STATE_READY);
 }
 
-int ph_get_state(void)
+uint8_t ph_get_state(void)
 {
 	return ph_state;
 }
 
-int ph_get_last_error(void)
+uint8_t ph_get_last_error(void)
 {
 	return ph_last_error;
 }
