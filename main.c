@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "radio.h"
+#include "fifo.h"
 #include "packet_handler.h"
 
 #define LED1	BIT0
@@ -12,6 +13,7 @@
 
 #ifdef TEST
 void test_main(void);
+void test_packet_handler(const char* message);
 void test_error(void);
 #endif
 
@@ -61,9 +63,9 @@ int main(void)
 
 #ifdef TEST
 // AIS test messages, more samples see http://www.aishub.net/nmea-sample.html
-const char* test_message_0 = "14eG;o@034o8sd<L9i:a;WF>062D";
-const char* test_message_1 = "13u?etPv2;0n:dDPwUM1U1Cb069D";
-const char* test_message_2 = "15MgK45P3@G?fl0E`JbR0OwT0@MS";
+const char test_message_0[] = "14eG;o@034o8sd<L9i:a;WF>062D";
+const char test_message_1[] = "13u?etPv2;0n:dDPwUM1U1Cb069D";
+const char test_message_2[] = "15MgK45P3@G?fl0E`JbR0OwT0@MS";
 
 void test_main(void)
 {
@@ -75,24 +77,40 @@ void test_main(void)
 	ph_start();
 
 	while (1) {
-		// Send fake AIS messages
 		_delay_cycles(1000000);
-		test_ph_send_packet(test_message_0);
-		if (ph_get_last_error() != PH_ERROR_NONE)
-			test_error();
-
+		test_packet_handler(test_message_0);
 		_delay_cycles(1000000);
-		test_ph_send_packet(test_message_1);
-		if (ph_get_last_error() != PH_ERROR_NONE)
-			test_error();
-
+		test_packet_handler(test_message_1);
 		_delay_cycles(1000000);
-		test_ph_send_packet(test_message_2);
-		if (ph_get_last_error() != PH_ERROR_NONE)
-			test_error();
+		test_packet_handler(test_message_2);
 	}
 }
 #endif
+
+uint8_t out_buffer[32];		// max message size = 256 bit, typical AIS message is 168+16 bit
+
+void test_packet_handler(const char* message)
+{
+	// send/receive fake AIS message
+	test_ph_send_packet(message);
+
+	// verify packet handler operation
+	if (ph_get_last_error() != PH_ERROR_NONE)
+		test_error();
+
+	// verify if a new packet showed up in FIFO
+	uint16_t packet_size = fifo_get_packet();
+	if (packet_size == 0)
+		test_error();
+
+	// read packet from FIFO
+	uint16_t i = 0;
+	while(packet_size != i)
+		out_buffer[i++] = fifo_read_byte();
+
+	// remove packet from FIFO
+	fifo_remove_packet();
+}
 
 void test_error()
 {

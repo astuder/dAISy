@@ -7,6 +7,7 @@
 #include <inttypes.h>
 
 #include "radio.h"
+#include "fifo.h"
 #include "packet_handler.h"
 
 // sync word for AIS
@@ -48,6 +49,7 @@ void ph_setup(void)
 	// configure data pins as inputs
 	PH_DATA_SEL &= ~(PH_DATA_CLK_PIN | PH_DATA_PIN);
 	PH_DATA_DIR &= ~(PH_DATA_CLK_PIN | PH_DATA_PIN);
+	fifo_reset();
 }
 
 void ph_start(void)
@@ -102,6 +104,7 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_INIT:									// state: initialize
 			rx_bitstream = 0;								// reset bit-stream
+			fifo_new_packet();							// reset fifo packet
 			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
 			break;
 
@@ -166,7 +169,7 @@ __interrupt void ph_irq_handler(void)
 				rx_crc >>= 1;
 
 			if ((rx_bit_count & 0x07)==0x07) {				// every 8th bit.. (counter started at 0)
-				// TODO: store byte in packet buffer
+				fifo_write_byte(rx_data_byte);
 				rx_data_byte = 0;
 			}
 
@@ -178,7 +181,7 @@ __interrupt void ph_irq_handler(void)
 					ph_state = PH_STATE_INIT;				// restart
 					break;
 				}
-				// TODO: process completed AIS packet
+				fifo_commit_packet();
 				ph_state = PH_STATE_INIT;					// reset state machine
 				break;
 			}
