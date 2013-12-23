@@ -3,7 +3,6 @@
   * Author: Adrian Studer
  */
 
-#include <msp430.h>
 #include <inttypes.h>
 #include "fifo.h"
 

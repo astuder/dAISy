@@ -1,8 +1,10 @@
 #include <msp430.h> 
 #include <inttypes.h>
 
-#include "radio.h"
 #include "fifo.h"
+#include "dec_to_str.h"
+
+#include "radio.h"
 #include "packet_handler.h"
 
 #define LED1	BIT0
@@ -75,12 +77,20 @@ int main(void)
 
 #ifdef TEST
 // AIS test messages, more samples see http://www.aishub.net/nmea-sample.html
-const char test_message_0[] = "14eG;o@034o8sd<L9i:a;WF>062D";
+const char test_message_0[] = "133sVfPP00PD>hRMDH@jNOvN20S8";
 const char test_message_1[] = "13u?etPv2;0n:dDPwUM1U1Cb069D";
-const char test_message_2[] = "15MgK45P3@G?fl0E`JbR0OwT0@MS";
+const char test_message_2[] = "100h00PP0@PHFV`Mg5gTH?vNPUIp";
+
 
 void test_main(void)
 {
+	// testing dec_to_str
+	char test_buf[10];
+	const uint32_t a = 1023;
+	udec_to_str(test_buf, 9, a);
+	const int32_t b = -1023;
+	dec_to_str(test_buf, 9, b);
+
 	// setup packet handler
 	ph_setup();
 	test_ph_setup();
@@ -89,6 +99,7 @@ void test_main(void)
 	ph_start();
 
 	while (1) {
+		// testing packet handler
 		_delay_cycles(1000000);
 		test_packet_handler(test_message_0);
 		_delay_cycles(1000000);
@@ -114,10 +125,29 @@ void test_packet_handler(const char* message)
 	if (packet_size == 0)
 		test_error();
 
-	// read packet from FIFO
+	// verify if new packet is identical with sent message
+	if (!test_ph_verify_packet(message))
+		test_error();
+
+	// copy packet into buffer for some sanity checks
+	packet_size = fifo_get_packet();		// reset FIFO to read packet
 	uint16_t i = 0;
-	while(packet_size != i)
+	while(i < packet_size)
 		out_buffer[i++] = fifo_read_byte();
+
+	uint8_t ais_msg_type = out_buffer[0] >> 2;
+	uint32_t ais_mmsi;
+
+	if (ais_msg_type == 1 || ais_msg_type == 2 || ais_msg_type == 3)
+		ais_mmsi = (((uint32_t) (out_buffer[1])) << 22 |
+					((uint32_t) (out_buffer[2])) << 14 |
+					((uint32_t) (out_buffer[3])) << 6 |
+							    (out_buffer[4] >> 2));
+	else
+		ais_mmsi = 0;
+
+	char ais_mmsi_str[9];
+	udec_to_str(ais_mmsi_str, 9, ais_mmsi);
 
 	// remove packet from FIFO
 	fifo_remove_packet();

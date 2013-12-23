@@ -44,6 +44,8 @@
 volatile uint8_t ph_state = PH_STATE_OFF;
 volatile uint8_t ph_last_error = PH_ERROR_NONE;
 
+uint8_t ph_error_counts[PH_ERROR_CRC+1];
+
 void ph_setup(void)
 {
 	// configure data pins as inputs
@@ -103,8 +105,9 @@ __interrupt void ph_irq_handler(void)
 			break;
 
 		case PH_STATE_INIT:									// state: initialize
+			ph_error_counts[ph_last_error]++;
 			rx_bitstream = 0;								// reset bit-stream
-			fifo_new_packet();							// reset fifo packet
+			fifo_new_packet();								// reset fifo packet
 			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
 			break;
 
@@ -245,7 +248,7 @@ void test_ph_send_bit_nrzi(uint8_t tx_bit)
 	_delay_cycles(800);
 }
 
-void test_ph_send_packet(const char* buffer)
+void test_ph_send_packet(const char* message)
 {
 	// emulating AIS communication received from modem
 	// wraps buffer into packet and sends it to packet handler
@@ -287,15 +290,15 @@ void test_ph_send_packet(const char* buffer)
 	tx_bit_count = 0;
 	tx_byte = 0;
 	j = 0;
-	while (buffer[j]) {
+	while (message[j]) {
 		// (re)fill transmission byte with next 8 bits
 		while (tx_bit_count != 8) {
 			if (asc_bit_count == 0) {
-				// fetch next character and convert to 6-bit binary
-				if (buffer[j]) {
-					asc_byte = buffer[j] - 48;
+				// fetch next character and convert NMEA ASCII to 6-bit binary
+				if (message[j]) {
+					asc_byte = message[j] - 48;
 					if (asc_byte > 40)
-						asc_byte -= 6;
+						asc_byte -= 8;
 					asc_bit_count = 6;
 					j++;
 				} else {
@@ -368,6 +371,74 @@ void test_ph_send_packet(const char* buffer)
 			test_ph_send_bit_nrzi(0);
 		tx_byte >>= 1;
 	}
+}
+
+uint8_t test_ph_verify_packet(const char* message)
+{
+	// read packet from FIFO and encode into NMEA ASCII
+	uint8_t packet_size = fifo_get_packet();
+
+	if(!message || packet_size == 0)
+		return 0;		// error, no data to verify
+
+	packet_size -= 2;	// ignore CRC
+
+	uint8_t raw_byte;
+	uint8_t raw_bit;
+
+	uint8_t nmea_byte;
+	uint8_t nmea_bit;
+	uint8_t nmea_in;
+
+	nmea_in = 0;
+	nmea_byte = 0;
+	nmea_bit = 6;
+
+	while (packet_size != 0) {
+		raw_byte = fifo_read_byte();
+		raw_bit = 8;
+
+		while (raw_bit > 0) {
+			nmea_byte <<= 1;
+			if (raw_byte & 0x80)
+				nmea_byte |= 1;
+			nmea_bit--;
+
+			if (nmea_bit == 0) {
+				if (nmea_byte > 39)
+					nmea_byte += 8;
+				nmea_byte += 48;
+				if (message[nmea_in++] != nmea_byte)
+					return 0;	// error, NMEA message not identical
+				nmea_byte = 0;
+				nmea_bit = 6;
+			}
+
+			raw_byte <<= 1;
+			raw_bit--;
+		}
+
+		packet_size--;
+	}
+
+	// if we have an unfinished NMEA character
+	if (nmea_bit != 6)
+	{
+		// stuff with 0 bits if needed
+		while (nmea_bit != 0) {
+			nmea_byte <<= 1;
+			nmea_bit--;
+		}
+
+		// .. and convert and store last byte
+		if (nmea_byte > 39)
+			nmea_byte += 8;
+		nmea_byte += 48;
+		if (message[nmea_in] != nmea_byte)
+			return 0;	// error, NMEA message not identical
+	}
+
+	return 1;	// verification successful, no errors found
 }
 
 #endif
