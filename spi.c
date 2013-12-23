@@ -7,6 +7,10 @@
 #include <inttypes.h>
 #include "spi.h"
 
+#define SPI_CLK		BIT5	// clock pin 1.5
+#define SPI_MISO	BIT6	// MISO pin 1.6
+#define SPI_MOSI	BIT7	// MOSI pin 1.7
+
 void spi_init(void)
 {
 	// initialize SPI pins

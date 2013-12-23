@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "fifo.h"
+#include "uart.h"
 #include "dec_to_str.h"
 
 #include "radio.h"
@@ -91,6 +92,9 @@ void test_main(void)
 	const int32_t b = -1023;
 	dec_to_str(test_buf, 9, b);
 
+	// setup uart
+	uart_init();
+
 	// setup packet handler
 	ph_setup();
 	test_ph_setup();
@@ -146,8 +150,12 @@ void test_packet_handler(const char* message)
 	else
 		ais_mmsi = 0;
 
-	char ais_mmsi_str[9];
+	char ais_mmsi_str[10];
+	ais_mmsi_str[9] = 0;
 	udec_to_str(ais_mmsi_str, 9, ais_mmsi);
+	uart_send_string(ais_mmsi_str);
+	uart_send_byte('\r');
+	uart_send_byte('\n');
 
 	// remove packet from FIFO
 	fifo_remove_packet();
