@@ -43,6 +43,9 @@ int main(void)
 	P1DIR |= LED1;
 	LED_OFF;
 
+	// setup uart
+	uart_init();
+
 	// setup packet handler
 	ph_setup();
 
@@ -61,6 +64,10 @@ int main(void)
 
 	// start packet receiving
 	ph_start();
+
+#ifdef REPORT_ERRORS
+	uart_send_string("dAISy 0.2 started!\r\n");
+#endif
 
 	while (1) {
 		// retrieve last packet handler error
