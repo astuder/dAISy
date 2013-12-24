@@ -1,5 +1,5 @@
 /*
- * Simple UART library for MSP430 USCI A0
+ * Simple UART library for MSP430 USCI A0 - so far TX only
  * Author: Adrian Studer
  */
 

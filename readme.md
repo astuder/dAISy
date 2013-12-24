@@ -1,7 +1,7 @@
 dAISy - A simple DIY AIS Receiver
 =================================
 
-dAISy (do AIS yourself) is a simple AIS receiver based on Silicon Labs Si4362 EZRadioPro receiver, Texas Instruments MSP430G2553 and MSP-EXP430G2 v1.5 LaunchPad. The software was developed with Code Composer Studio 5.5.
+dAISy (do AIS yourself) is a simple AIS receiver based on Silicon Labs [Si4362 EZRadioPro](http://www.silabs.com/products/wireless/ezradiopro/pages/si4362.aspx) receiver, Texas Instruments [MSP430G2553](http://www.ti.com/product/msp430g2553) MCU and [MSP-EXP430G2](http://www.ti.com/tool/msp-exp430g2) v1.5 LaunchPad. The software was developed with Code Composer Studio 5.5.
 
 AIS, short for "Automatic Identification System", is a tracking system for ships. More on [Wikipedia](http://en.wikipedia.org/wiki/Automatic_Identification_System). There are many websites dedicated to tracking ships based on this system, like for example [MarineTraffic](http://www.marinetraffic.com/).
 

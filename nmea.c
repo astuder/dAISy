@@ -27,6 +27,7 @@ const char nmea_hex[] = { '0', '1', '2', '3',		// lookup table for hex conversio
 						  '8', '9', 'A', 'B',
 						  'C', 'D', 'E', 'F' };
 
+// process AIS next packet in FIFO and transmit as NMEA sentence(s) through UART
 void nmea_process_packet(void)
 {
 	uint16_t packet_size = fifo_get_packet();
@@ -106,7 +107,7 @@ void nmea_process_packet(void)
 }
 
 // adds char to buffer and updates CRC
-void nmea_push_char(char c)
+inline void nmea_push_char(char c)
 {
 	nmea_crc ^= c;
 	nmea_buffer[nmea_buffer_index++] = c;
@@ -173,6 +174,7 @@ uint8_t nmea_push_packet(uint8_t packet_size)
 
 #ifdef TEST
 
+// verify if AIS packet in FIFO is the same as the NMEA payload sent through self-test
 uint8_t test_nmea_verify_packet(const char* message)
 {
 	// read packet from FIFO and encode into NMEA ASCII

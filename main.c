@@ -9,6 +9,8 @@
 #include "packet_handler.h"
 #include "nmea.h"
 
+#define REPORT_ERRORS			// un-comment to send error messages over UART
+
 #define LED1	BIT0
 
 #define LED_ON		P1OUT |= LED1
@@ -61,20 +63,36 @@ int main(void)
 	ph_start();
 
 	while (1) {
-		// toggle LED when encountering an error
+		// retrieve last packet handler error
 		uint8_t error = ph_get_last_error();
-		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC) {
+
+
+#ifdef REPORT_ERRORS
+		// report error if packet handler failed after finding preamble and start flag
+		if (error == PH_ERROR_NOEND) {
+			uart_send_string("Error: No end flag!\r\n");
+		} else if (error == PH_ERROR_STUFFBIT) {
+			uart_send_string("Error: Invalid stuff bit!\r\n");
+		} else if (error == PH_ERROR_CRC) {
+			uart_send_string("Error: CRC error!\r\n");
+		}
+#else
+		// toggle LED if packet handler failed after finding preamble and start flag
+		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)
 			LED_TOGGLE;
+#endif
+
+		// check if a new valid packet arrived
+		uint16_t size = fifo_get_packet();
+		if (size > 0) {								// if so, process packet
+			nmea_process_packet();					// process packet (NMEA message will be sent over UART)
+			fifo_remove_packet();					// remove processed packet from FIFO
 		}
 
-		// check if a new packet arrived
-		uint16_t size = fifo_get_packet();
-		if (size > 0) {
-			// process packet (NMEA message will be sent over UART)
-			nmea_process_packet();
-			// remove processed packet from FIFO
-			fifo_remove_packet();
-		}
+		// enter low power mode LPM0 (everything off)
+		// TODO: wait for UART to complete transmission
+		// TODO: suspend UART
+		// TODO: enter low power mode
 	}
 }
 
@@ -87,6 +105,8 @@ const char test_message_2[] = "100h00PP0@PHFV`Mg5gTH?vNPUIp";
 
 void test_main(void)
 {
+	radio_shutdown();	// put radio into shutdown to avoid damage when writing to radio output pins
+
 	// testing dec_to_str
 	char test_buf[10];
 	const uint32_t a = 1023;

@@ -10,6 +10,8 @@
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
 void radio_configure(void);							// configure radio using radio_config_Si4362.h
 
+void radio_shutdown(void);							// turn off radio
+
 // helpers
 void radio_debug(void);								// debug code, reading chip status, version etc.
 
@@ -29,8 +31,6 @@ void radio_change_state(							// change state of radio, e.g. to READY from RX
 
 void radio_fifo_info(								// read FIFO information, like pending bytes, result in radio_buffer.fifo_info
 					uint8_t reset_reset_fifo);			// if 2, RX FIFO will be reset
-
-uint8_t radio_read_rx_fifo();						// read bytes from RX FIFO, result in radio_buffer.data, returns number of bytes read
 
 void radio_part_info(void);							// read part information, like part number (4362), result in radio_buffer.part_info
 void radio_func_info(void);							// read firmware information, like firmware version, result in radio_buffer.func_info
@@ -121,7 +121,7 @@ struct device_state_s {
 };
 
 union radio_buffer_u {
-	uint8_t data[64];							// data buffer, 64 bytes = FIFO length
+	uint8_t data[64];							// data buffer, 64 bytes = FIFO length, when not using FIFO could be as low as 8 bytes
 	struct part_info_s			part_info;		// basic information about the device
 	struct func_info_s			func_info;		// function revision information of the device
 	struct fifo_info_s			fifo_info;		// transmit and receive FIFO counts

@@ -46,6 +46,7 @@ volatile uint8_t ph_last_error = PH_ERROR_NONE;
 
 uint8_t ph_error_counts[PH_ERROR_CRC+1];
 
+// setup packet handler
 void ph_setup(void)
 {
 	// configure data pins as inputs
@@ -54,6 +55,7 @@ void ph_setup(void)
 	fifo_reset();
 }
 
+// start packet handler operation, including ISR
 void ph_start(void)
 {
 	// enable interrupt on positive edge of pin wired to DATA_CLK (GPIO2 as configured in radio_config.h)
@@ -68,21 +70,20 @@ void ph_start(void)
 
 	// reset packet handler state machine
 	ph_last_error = PH_ERROR_NONE;
-	ph_state = PH_STATE_INIT;
+	ph_state = PH_STATE_RESET;
 }
 
-// interrupt handler for receiving data via DATA/DATA_CLK
+// interrupt handler for receiving raw modem data via DATA/DATA_CLK pins
 #pragma vector=PH_DATA_PORT_VECTOR
 __interrupt void ph_irq_handler(void)
 {
-	static uint16_t rx_prev_bit;				// previous bit for NRZI decoding
 	static uint16_t rx_bitstream;				// shift register with incoming data
 	static uint16_t rx_bit_count;				// bit counter for various purposes
+	static uint16_t rx_crc;						// word for AIS payload CRC calculation
 	static uint8_t rx_one_count;				// counter of 1's to identify stuff bits
 	static uint8_t rx_data_byte;				// byte to receive actual package data
-	static uint16_t rx_crc;						// word for CRC calculation
-
-	uint16_t rx_this_bit, rx_bit;
+	static uint8_t rx_prev_bit;					// previous bit for NRZI decoding
+	uint8_t rx_this_bit, rx_bit;				// temporary store for bits
 
 	if (PH_DATA_IFG & PH_DATA_CLK_PIN) {		// verify this interrupt is from DATA_CLK/GPIO_2 pin
 
@@ -100,19 +101,21 @@ __interrupt void ph_irq_handler(void)
 			rx_bitstream |= 0x8000;
 		}
 
+		// packet handler state machine
 		switch (ph_state) {
 		case PH_STATE_OFF:									// state: off, do nothing
 			break;
 
-		case PH_STATE_INIT:									// state: initialize
-			ph_error_counts[ph_last_error]++;
+		case PH_STATE_RESET:								// state: reset, prepare state machine for next packet
+			ph_error_counts[ph_last_error]++;				// keep some stats about errors
 			rx_bitstream = 0;								// reset bit-stream
 			fifo_new_packet();								// reset fifo packet
+			// TODO: wakeup main thread from low-power mode to allow for error reporting
 			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
 			break;
 
-		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 16 bit of training sequence
-			if (rx_bitstream == 0x5555) {					// look for 16 alternating bits
+		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 16 bit of training sequence (01010..)
+			if (rx_bitstream == 0x5555) {					// if we found 16 alternating bits
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_WAIT_FOR_START;			// next state: wait for start flag
 			}
@@ -121,18 +124,18 @@ __interrupt void ph_irq_handler(void)
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
 			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the start flag
 				rx_bit_count = 0;							// reset bit counter
-				ph_state = PH_STATE_RECEIVE_START;			// next state: start receiving packet
+				ph_state = PH_STATE_PREFETCH;				// next state: start receiving packet
 				break;
 			}
 
-			rx_bit_count++;									// increase bit counter
-			if (rx_bit_count > 24) {						// if start flag was not found within 24 bit of preamble
+			rx_bit_count++;									// else increase bit counter
+			if (rx_bit_count > 24) {						// if start flag was not found within more than 24 bits of preamble
 				ph_last_error = PH_ERROR_NOSTART;			// report missing start flag error
-				ph_state = PH_STATE_INIT;					// reset state machine
+				ph_state = PH_STATE_RESET;					// reset state machine
 			}
 			break;
 
-		case PH_STATE_RECEIVE_START:						// state: pre-fill receive buffer with 8 bits
+		case PH_STATE_PREFETCH:								// state: pre-fill receive buffer with 8 bits
 			rx_bit_count++;									// increase bit counter
 			if (rx_bit_count == 8) {						// after 8 bits arrived
 				rx_bit_count = 0;							// reset bit counter
@@ -151,16 +154,15 @@ __interrupt void ph_irq_handler(void)
 			if (rx_one_count == 5) {						// if we expect a stuff-bit..
 				if (rx_bit) {								// if stuff bit is not zero the packet is invalid
 					ph_last_error = PH_ERROR_STUFFBIT;		// report invalid stuff-bit error
-					ph_state = PH_STATE_INIT;				// restart
-				}
-				else
+					ph_state = PH_STATE_RESET;				// restart state machine
+				} else
 					rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
 				break;
 			}
 
 			rx_data_byte = rx_data_byte >> 1 | rx_bit;		// shift bit into current data byte
 
-			if (rx_bit) {
+			if (rx_bit) {									// if current bit is a 1
 				rx_one_count++;								// count 1's to identify stuff bit
 				rx_bit = 1;									// avoid shifting for CRC
 			}
@@ -172,26 +174,26 @@ __interrupt void ph_irq_handler(void)
 				rx_crc >>= 1;
 
 			if ((rx_bit_count & 0x07)==0x07) {				// every 8th bit.. (counter started at 0)
-				fifo_write_byte(rx_data_byte);
-				rx_data_byte = 0;
+				fifo_write_byte(rx_data_byte);				// add buffered byte to FIFO
+				rx_data_byte = 0;							// reset buffer
 			}
 
 			rx_bit_count++;									// count valid, de-stuffed data bits
 
-			if ((rx_bitstream & 0xff00) == 0x7e00) {			// if we found the end flag 0x7e we're done
-				if (rx_crc != 0xf0b8) {						// if CRC verification failed
+			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the end flag 0x7e we're done
+				if (rx_crc != 0xf0b8)						// if CRC verification failed
 					ph_last_error = PH_ERROR_CRC;			// report CRC error
-					ph_state = PH_STATE_INIT;				// restart
-					break;
+				else {
+					fifo_commit_packet();					// else commit packet in FIFO
+					// TODO: wakeup main thread from low-power mode
 				}
-				fifo_commit_packet();
-				ph_state = PH_STATE_INIT;					// reset state machine
+				ph_state = PH_STATE_RESET;					// restart state machine
 				break;
 			}
 
 			if (rx_bit_count > 1020) {						// if packet is too long, it's probably invalid
 				ph_last_error = PH_ERROR_NOEND;				// report error
-				ph_state = PH_STATE_INIT;					// reset state machine
+				ph_state = PH_STATE_RESET;					// reset state machine
 				break;
 			}
 
@@ -199,9 +201,10 @@ __interrupt void ph_irq_handler(void)
 		}
 	}
 
-	PH_DATA_IFG = 0;							// clear all interrupt flags
+	PH_DATA_IFG = 0;							// clear all pin interrupt flags
 }
 
+// stop receiving and processing packets
 void ph_stop(void)
 {
 	// disable interrupt on pin wired to GPIO2
@@ -211,11 +214,13 @@ void ph_stop(void)
 	radio_change_state(RADIO_STATE_READY);
 }
 
+// get current state of packet handler state machine
 uint8_t ph_get_state(void)
 {
 	return ph_state;
 }
 
+// get last error reported by packet handler
 uint8_t ph_get_last_error(void)
 {
 	return ph_last_error;
@@ -223,6 +228,7 @@ uint8_t ph_get_last_error(void)
 
 #ifdef TEST
 
+// configure packet handler for self-test
 void test_ph_setup(void)
 {
 	// configure data pins as outputs to test packet handler interrupt routine
@@ -230,6 +236,7 @@ void test_ph_setup(void)
 	PH_DATA_DIR |= PH_DATA_CLK_PIN | PH_DATA_PIN;
 }
 
+// encode and send one bit for packet handler self-test
 void test_ph_send_bit_nrzi(uint8_t tx_bit)
 {
 	// send negative clock edge
@@ -249,6 +256,7 @@ void test_ph_send_bit_nrzi(uint8_t tx_bit)
 	_delay_cycles(800);
 }
 
+// send one NMEA encoded AIS payload to packet handler for self-test
 void test_ph_send_packet(const char* message)
 {
 	// emulating AIS communication received from modem

@@ -48,6 +48,7 @@ union radio_buffer_u radio_buffer;
 void send_command(uint8_t cmd, const uint8_t *send_buffer, uint8_t send_length, uint8_t response_length);
 int receive_result(uint8_t length);
 
+// configure I/O pins used for radio
 void radio_setup(void)
 {
 	// initialize SPI pins
@@ -68,6 +69,18 @@ void radio_setup(void)
 	return;
 }
 
+// shut down radio, call radio_configure to restart
+void radio_shutdown(void)
+{
+	// initialize shutdown pin
+	P2SEL &= ~SDN;									// shutdown pin is I/O
+	P2DIR |= SDN;									// shutdown pin is output
+
+	// SDN high = turn off radio
+	P2OUT |= SDN;
+}
+
+// reset radio and load configuration data
 void radio_configure(void)
 {
 	// reset radio: SDN=1, wait >1us, SDN=0
@@ -90,22 +103,26 @@ void radio_configure(void)
 	return;
 }
 
+// retrieve radio device information (e.g. chip model)
 void radio_part_info(void)
 {
 	send_command(CMD_PART_INFO, 0, 0, sizeof(radio_buffer.part_info));
 }
 
+// retrieve radio function revision information
 void radio_func_info(void)
 {
 	send_command(CMD_FUNC_INFO, 0, 0, sizeof(radio_buffer.func_info));
 }
 
+// retrieve radio FIFO information
 void radio_fifo_info(uint8_t reset_fifo)
 {
 	radio_buffer.data[0] = reset_fifo;
 	send_command(CMD_FIFO_INFO, radio_buffer.data, 1, sizeof(radio_buffer.fifo_info));
 }
 
+// retrieve radio interrupt status information
 void radio_get_int_status(uint8_t ph_clr_pending, uint8_t modem_clr_pending, uint8_t chip_clr_pending)
 {
 	radio_buffer.data[0] = ph_clr_pending;
@@ -114,24 +131,28 @@ void radio_get_int_status(uint8_t ph_clr_pending, uint8_t modem_clr_pending, uin
 	send_command(CMD_GET_INT_STATUS, radio_buffer.data, 3, sizeof(radio_buffer.int_status));
 }
 
+// retrieve radio packet handler status information
 void radio_get_ph_status(uint8_t clr_pending)
 {
 	radio_buffer.data[0] = clr_pending;
 	send_command(CMD_GET_PH_STATUS, radio_buffer.data, 1, sizeof(radio_buffer.ph_status));
 }
 
+// retrieve radio chip status information
 void radio_get_chip_status(uint8_t clr_pending)
 {
 	radio_buffer.data[0] = clr_pending;
 	send_command(CMD_GET_CHIP_STATUS, radio_buffer.data, 1, sizeof(radio_buffer.chip_status));
 }
 
+// retrieve radio modem status information
 void radio_get_modem_status(uint8_t clr_pending)
 {
 	radio_buffer.data[0] = clr_pending;
 	send_command(CMD_GET_MODEM_STATUS, radio_buffer.data, 1, sizeof(radio_buffer.modem_status));
 }
 
+// put radio in receive state
 void radio_start_rx(uint8_t channel, uint8_t start_condition, uint16_t rx_length, uint8_t rx_timeout_state,	uint8_t rx_valid_state,	uint8_t rx_invalid_state)
 {
 	radio_buffer.data[0] = channel;
@@ -144,41 +165,20 @@ void radio_start_rx(uint8_t channel, uint8_t start_condition, uint16_t rx_length
 	send_command(CMD_START_RX, radio_buffer.data, 7, 0);
 }
 
+// read radio state
 void radio_request_device_state(void)
 {
 	send_command(CMD_REQUEST_DEVICE_STATE, 0, 0, sizeof(radio_buffer.device_state));
 }
 
+// change radio state, e.g. from receive to ready
 void radio_change_state(uint8_t next_state)
 {
 	radio_buffer.data[0] = next_state;
 	send_command(CMD_CHANGE_STATE, radio_buffer.data, 1, 0);
 }
 
-uint8_t radio_read_rx_fifo(void)
-{
-	uint8_t fifo_count = 0;
-
-	radio_fifo_info(0);
-	fifo_count = radio_buffer.fifo_info.rx_fifo_count;
-
-	if (fifo_count)	{
-
-		SPI_ON;
-		spi_transfer(CMD_READ_RX_FIFO);						// send command to read FIFO
-
-		uint8_t i = 0;
-		while (i < fifo_count) {
-			radio_buffer.data[i] = spi_transfer(0);			// receive response
-			i++;
-		}
-
-		SPI_OFF;
-	}
-
-	return fifo_count;
-}
-
+// read various radio status and information registers
 void radio_debug(void)
 {
 	radio_get_int_status(0, 0, 0);
@@ -208,9 +208,8 @@ void send_command(uint8_t cmd, const uint8_t *send_buffer, uint8_t send_length, 
 
 	while (!RADIO_READY);					// always wait for completion
 
-	if (response_length) {
+	if (response_length)
 		while (receive_result(response_length) == 0);
-	}
 
 	return;
 }
