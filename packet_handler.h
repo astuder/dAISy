@@ -37,7 +37,6 @@ uint8_t ph_get_last_error(void);	// get last packet handler error
 #ifdef TEST
 void test_ph_setup(void);						// setup pins for emulation
 void test_ph_send_packet(const char* message);	// send AIS packet in message (NMEA encoded AIS payload http://gpsd.berlios.de/AIVDM.html#_aivdm_aivdo_payload_armoring)
-uint8_t test_ph_verify_packet(const char* message);	// verify if packet in FIFO is identical with in NMEA encoded message
 #endif
 
 #endif /* PACKET_HANDLER_H_ */

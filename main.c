@@ -7,6 +7,7 @@
 
 #include "radio.h"
 #include "packet_handler.h"
+#include "nmea.h"
 
 #define LED1	BIT0
 
@@ -60,17 +61,18 @@ int main(void)
 	ph_start();
 
 	while (1) {
+		// toggle LED when encountering an error
 		uint8_t error = ph_get_last_error();
-		if(error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)
-		{
+		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC) {
 			LED_TOGGLE;
 		}
-		uint8_t state = ph_get_state();
-		uint16_t size = fifo_get_packet();
 
-		if(size > 0)	// if a new packet arrived
-		{
-			// TODO: process packet, e.g. create NMEA message
+		// check if a new packet arrived
+		uint16_t size = fifo_get_packet();
+		if (size > 0) {
+			// process packet (NMEA message will be sent over UART)
+			nmea_process_packet();
+			// remove processed packet from FIFO
 			fifo_remove_packet();
 		}
 	}
@@ -104,16 +106,14 @@ void test_main(void)
 
 	while (1) {
 		// testing packet handler
-		_delay_cycles(1000000);
+		_delay_cycles(10000000);
 		test_packet_handler(test_message_0);
-		_delay_cycles(1000000);
+		_delay_cycles(10000000);
 		test_packet_handler(test_message_1);
-		_delay_cycles(1000000);
+		_delay_cycles(10000000);
 		test_packet_handler(test_message_2);
 	}
 }
-
-uint8_t out_buffer[32];		// max message size = 256 bit, typical AIS message is 168+16 bit
 
 void test_packet_handler(const char* message)
 {
@@ -130,32 +130,10 @@ void test_packet_handler(const char* message)
 		test_error();
 
 	// verify if new packet is identical with sent message
-	if (!test_ph_verify_packet(message))
+	if (!test_nmea_verify_packet(message))
 		test_error();
 
-	// copy packet into buffer for some sanity checks
-	packet_size = fifo_get_packet();		// reset FIFO to read packet
-	uint16_t i = 0;
-	while(i < packet_size)
-		out_buffer[i++] = fifo_read_byte();
-
-	uint8_t ais_msg_type = out_buffer[0] >> 2;
-	uint32_t ais_mmsi;
-
-	if (ais_msg_type == 1 || ais_msg_type == 2 || ais_msg_type == 3)
-		ais_mmsi = (((uint32_t) (out_buffer[1])) << 22 |
-					((uint32_t) (out_buffer[2])) << 14 |
-					((uint32_t) (out_buffer[3])) << 6 |
-							    (out_buffer[4] >> 2));
-	else
-		ais_mmsi = 0;
-
-	char ais_mmsi_str[10];
-	ais_mmsi_str[9] = 0;
-	udec_to_str(ais_mmsi_str, 9, ais_mmsi);
-	uart_send_string(ais_mmsi_str);
-	uart_send_byte('\r');
-	uart_send_byte('\n');
+	nmea_process_packet();
 
 	// remove packet from FIFO
 	fifo_remove_packet();

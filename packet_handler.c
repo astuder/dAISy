@@ -222,6 +222,7 @@ uint8_t ph_get_last_error(void)
 }
 
 #ifdef TEST
+
 void test_ph_setup(void)
 {
 	// configure data pins as outputs to test packet handler interrupt routine
@@ -373,72 +374,4 @@ void test_ph_send_packet(const char* message)
 	}
 }
 
-uint8_t test_ph_verify_packet(const char* message)
-{
-	// read packet from FIFO and encode into NMEA ASCII
-	uint8_t packet_size = fifo_get_packet();
-
-	if(!message || packet_size == 0)
-		return 0;		// error, no data to verify
-
-	packet_size -= 2;	// ignore CRC
-
-	uint8_t raw_byte;
-	uint8_t raw_bit;
-
-	uint8_t nmea_byte;
-	uint8_t nmea_bit;
-	uint8_t nmea_in;
-
-	nmea_in = 0;
-	nmea_byte = 0;
-	nmea_bit = 6;
-
-	while (packet_size != 0) {
-		raw_byte = fifo_read_byte();
-		raw_bit = 8;
-
-		while (raw_bit > 0) {
-			nmea_byte <<= 1;
-			if (raw_byte & 0x80)
-				nmea_byte |= 1;
-			nmea_bit--;
-
-			if (nmea_bit == 0) {
-				if (nmea_byte > 39)
-					nmea_byte += 8;
-				nmea_byte += 48;
-				if (message[nmea_in++] != nmea_byte)
-					return 0;	// error, NMEA message not identical
-				nmea_byte = 0;
-				nmea_bit = 6;
-			}
-
-			raw_byte <<= 1;
-			raw_bit--;
-		}
-
-		packet_size--;
-	}
-
-	// if we have an unfinished NMEA character
-	if (nmea_bit != 6)
-	{
-		// stuff with 0 bits if needed
-		while (nmea_bit != 0) {
-			nmea_byte <<= 1;
-			nmea_bit--;
-		}
-
-		// .. and convert and store last byte
-		if (nmea_byte > 39)
-			nmea_byte += 8;
-		nmea_byte += 48;
-		if (message[nmea_in] != nmea_byte)
-			return 0;	// error, NMEA message not identical
-	}
-
-	return 1;	// verification successful, no errors found
-}
-
-#endif
+#endif // TEST
