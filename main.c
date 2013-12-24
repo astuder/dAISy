@@ -9,7 +9,7 @@
 #include "packet_handler.h"
 #include "nmea.h"
 
-#define REPORT_ERRORS			// un-comment to send error messages over UART
+#define DEBUG_MESSAGES			// un-comment to send error messages over UART
 
 #define LED1	BIT0
 
@@ -65,23 +65,46 @@ int main(void)
 	// start packet receiving
 	ph_start();
 
-#ifdef REPORT_ERRORS
-	uart_send_string("dAISy 0.2 started!\r\n");
+#ifdef DEBUG_MESSAGES
+	uart_send_string("dAISy 0.2 started\r\n");
+
+	// some information
+	uint8_t current_state;
+	uint8_t previous_state = ph_get_state();
 #endif
 
 	while (1) {
+
+#ifdef DEBUG_MESSAGES
+		// debug code to monitor signal strength (RSSI)
+		current_state = ph_get_state();
+		if (current_state != previous_state) {
+			switch(current_state) {
+			case PH_STATE_PREFETCH:																// found preamble and start flag
+				// report current signal strength
+				radio_get_modem_status(0);														// check modem for current RSSI
+				int16_t rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+				dec_to_str(radio_buffer.data, 3, rssi);											// convert to decimal string (reuse radio buffer)
+				radio_buffer.data[4] = 0;															// terminate string
+				uart_send_string("packet start, RSSI=");												// send message to UART
+				uart_send_string(radio_buffer.data);
+				uart_send_string("dBm\r\n");
+				break;
+			}
+			previous_state = current_state;
+		}
+#endif
+
 		// retrieve last packet handler error
 		uint8_t error = ph_get_last_error();
-
-
-#ifdef REPORT_ERRORS
+#ifdef DEBUG_MESSAGES
 		// report error if packet handler failed after finding preamble and start flag
 		if (error == PH_ERROR_NOEND) {
-			uart_send_string("Error: No end flag!\r\n");
+			uart_send_string("error: no end flag\r\n");
 		} else if (error == PH_ERROR_STUFFBIT) {
-			uart_send_string("Error: Invalid stuff bit!\r\n");
+			uart_send_string("error: invalid stuff bit\r\n");
 		} else if (error == PH_ERROR_CRC) {
-			uart_send_string("Error: CRC error!\r\n");
+			uart_send_string("error: CRC error\r\n");
 		}
 #else
 		// toggle LED if packet handler failed after finding preamble and start flag

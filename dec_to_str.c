@@ -48,7 +48,7 @@ void dec_to_str(char* buf, uint8_t digits, int32_t val)
 	do {
 		i--;
 		d = '0';
-		while (val > divider[i]) {
+		while (val >= divider[i]) {
 			d++;
 			val -= divider[i];
 		}
