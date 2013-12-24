@@ -31,7 +31,7 @@ enum PH_ERROR {
 };
 
 uint8_t ph_get_state(void);			// get current state of packet handler
-uint8_t ph_get_last_error(void);	// get last packet handler error
+uint8_t ph_get_last_error(void);	// get last packet handler error, will clear error
 
 // functions to test packet handler operation, DISCONNECT MODEM BEFORE TESTING!
 #ifdef TEST

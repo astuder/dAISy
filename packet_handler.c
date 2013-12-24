@@ -223,7 +223,9 @@ uint8_t ph_get_state(void)
 // get last error reported by packet handler
 uint8_t ph_get_last_error(void)
 {
-	return ph_last_error;
+	uint8_t error = ph_last_error;
+	ph_last_error = PH_ERROR_NONE;			// clear error
+	return error;
 }
 
 #ifdef TEST
