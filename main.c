@@ -1,3 +1,11 @@
+/*
+ * dAISy 0.2 - A simple AIS receiver
+ * Author: Adrian Studer
+ * License: CC BY-NC-SA Creative Commons Attribution-NonCommercial-ShareAlike
+ * 			http://creativecommons.org/licenses/by-nc-sa/4.0/
+ * 			Please contact the author if you want to use this work in a commercial product
+ */
+
 #include <msp430.h> 
 #include <inttypes.h>
 

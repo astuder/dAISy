@@ -1,6 +1,9 @@
 /*
  * NMEA library. Encodes raw AIS data from FIFO and sends through UART
  * Author: Adrian Studer
+ * License: CC BY-NC-SA Creative Commons Attribution-NonCommercial-ShareAlike
+ * 			http://creativecommons.org/licenses/by-nc-sa/4.0/
+ * 			Please contact the author if you want to use this work in a commercial product
  */
 
 

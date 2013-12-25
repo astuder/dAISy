@@ -7,11 +7,13 @@ AIS, short for "Automatic Identification System", is a tracking system for ships
 
 dAISy features:
 - tuned to 161.975 MHz (channel A)
-- receiving and decoding packets according to ITU-R M.1371-4 (NRZI decoding, bit-destuffing, CRC validation) 
-- wrapping valid packets into NMEA 0183 sentences (AIVDM)
-- sending NMEA sentences to PC via serial (9600 8N1)
+- receives and decoding packets according to ITU-R M.1371-4 (NRZI decoding, bit-destuffing, CRC validation) 
+- wraps valid packets into NMEA 0183 sentences (AIVDM)
+- sends NMEA sentences to PC via serial (9600 8N1)
 
 The output of dAISy can be processed and visualized by navigation programs like [OpenCPN](http://opencpn.org).
 
+All content of this project is licensed under CC BY-NC-SA - [Creative Commons Attribution-NonCommercial-ShareAlike](http://creativecommons.org/licenses/by-nc-sa/4.0/). Please contact the author if you plan to use this work in a commercial product.  
+ 
 Work in progress, check back later or drop me a message. 
 
