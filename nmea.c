@@ -67,6 +67,7 @@ void nmea_process_packet(void)
 		nmea_push_char(',');
 		nmea_push_char(curr_fragment + '0');
 		nmea_push_char(',');
+		curr_fragment++;
 
 		// write message id if there are multiple fragments
 		if (total_fragments > 1)
