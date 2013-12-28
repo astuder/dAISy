@@ -1,0 +1,115 @@
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 11/9/2013 5:19:22 PM
+
+BeginCmp
+TimeStamp = /51EB0516;
+Reference = C1;
+ValeurCmp = 100 pF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB0525;
+Reference = C2;
+ValeurCmp = 100 nF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB0534;
+Reference = C3;
+ValeurCmp = 1 uF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /527EDBCE;
+Reference = C4;
+ValeurCmp = 100 nF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB04F8;
+Reference = CR1;
+ValeurCmp = 11.5-13.8 pF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB0507;
+Reference = CR2;
+ValeurCmp = 6-7 pF;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB0569;
+Reference = LR1;
+ValeurCmp = 270 nH;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB055A;
+Reference = LR2;
+ValeurCmp = 160 nH;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB088F;
+Reference = P1;
+ValeurCmp = Antenna;
+IdModule  = SIL-2;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB06B6;
+Reference = P2;
+ValeurCmp = Power;
+IdModule  = SIL-2;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB0698;
+Reference = P3;
+ValeurCmp = SPI;
+IdModule  = SIL-6;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB06A7;
+Reference = P4;
+ValeurCmp = GPIO;
+IdModule  = SIL-4;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB13D8;
+Reference = R1;
+ValeurCmp = 100 K;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /527EDCAB;
+Reference = R2;
+ValeurCmp = 100 K;
+IdModule  = SM0805;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB040B;
+Reference = U1;
+ValeurCmp = SI4362;
+IdModule  = QFN20+1;
+EndCmp
+
+BeginCmp
+TimeStamp = /51EB05E9;
+Reference = X1;
+ValeurCmp = 30 MHz;
+IdModule  = crystal_FA238-TSX3225;
+EndCmp
+
+EndListe

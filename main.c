@@ -31,6 +31,10 @@ void test_packet_handler(const char* message);
 void test_error(void);
 #endif
 
+#ifdef DEBUG_MESSAGES
+char str_output_buffer[5];	// output buffer for numbers in some debug messages
+#endif
+
 int main(void)
 {
 	// configure WDT
@@ -92,10 +96,10 @@ int main(void)
 				// report current signal strength
 				radio_get_modem_status(0);														// check modem for current RSSI
 				int16_t rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
-				dec_to_str(radio_buffer.data, 3, rssi);											// convert to decimal string (reuse radio buffer)
-				radio_buffer.data[4] = 0;															// terminate string
-				uart_send_string("packet start, RSSI=");												// send message to UART
-				uart_send_string(radio_buffer.data);
+				dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
+				str_output_buffer[4] = 0;														// terminate string
+				uart_send_string("sync RSSI=");													// send message to UART
+				uart_send_string(str_output_buffer);
 				uart_send_string("dBm\r\n");
 				break;
 			}
@@ -107,12 +111,15 @@ int main(void)
 		uint8_t error = ph_get_last_error();
 #ifdef DEBUG_MESSAGES
 		// report error if packet handler failed after finding preamble and start flag
-		if (error == PH_ERROR_NOEND) {
-			uart_send_string("error: no end flag\r\n");
-		} else if (error == PH_ERROR_STUFFBIT) {
-			uart_send_string("error: invalid stuff bit\r\n");
-		} else if (error == PH_ERROR_CRC) {
-			uart_send_string("error: CRC error\r\n");
+		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)	{
+			uart_send_string("error: ");
+			if (error == PH_ERROR_NOEND)
+				uart_send_string("no end flag");
+			else if (error == PH_ERROR_STUFFBIT)
+				uart_send_string("invalid stuff bit");
+			else if (error == PH_ERROR_CRC)
+				uart_send_string("CRC error");
+			uart_send_string("\r\n");
 		}
 #else
 		// toggle LED if packet handler failed after finding preamble and start flag

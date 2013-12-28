@@ -13,10 +13,6 @@ dAISy features:
 
 The output of dAISy can be processed and visualized by navigation programs like [OpenCPN](http://opencpn.org).
 
-All content of this project is licensed under CC BY-NC-SA - [Creative Commons Attribution-NonCommercial-ShareAlike](http://creativecommons.org/licenses/by-nc-sa/4.0/). Please contact the author if you plan to use this work in a commercial product.  
+All content of this project is published under CC BY-NC-SA - [Creative Commons Attribution-NonCommercial-ShareAlike](http://creativecommons.org/licenses/by-nc-sa/4.0/).  
 
 A more detailed description of the project can be found in the [43oh.com forum](http://forum.43oh.com/topic/4833-potm-daisy-a-simple-ais-receiver/).
-
-
-
-
