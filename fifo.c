@@ -23,7 +23,7 @@ FIFO_PTR_TYPE fifo_packets[FIFO_PACKETS];			// table with start offsets of recei
 
 FIFO_PTR_TYPE fifo_bytes_in;						// counter for bytes written into current packet
 FIFO_PTR_TYPE fifo_bytes_out;						// counter for bytes read from current packet
-uint8_t fifo_packet_in;								// table index of incoming packet
+volatile uint8_t fifo_packet_in;					// table index of incoming packet
 uint8_t fifo_packet_out;							// table index of outgoing packet
 
 void fifo_reset(void)
