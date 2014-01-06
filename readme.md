@@ -6,12 +6,12 @@ dAISy (do AIS yourself) is a simple AIS receiver based on Silicon Labs [Si4362 E
 AIS, short for "Automatic Identification System", is a tracking system for ships. More on [Wikipedia](http://en.wikipedia.org/wiki/Automatic_Identification_System). There are many websites dedicated to tracking ships based on this system, like for example [MarineTraffic](http://www.marinetraffic.com/).
 
 dAISy features:
-- tuned to 161.975 MHz (channel A)
-- receives and decoding packets according to ITU-R M.1371-4 (NRZI decoding, bit-destuffing, CRC validation) 
+- hopping between channel A (161.975 MHz) and B (162.025 MHz)
+- receives, decodes and validates packets according to ITU-R M.1371-4 (NRZI decoding, bit-destuffing, CRC validation) 
 - wraps valid packets into NMEA 0183 sentences (AIVDM)
 - sends NMEA sentences to PC via serial (9600 8N1)
 
-The output of dAISy can be processed and visualized by navigation programs like [OpenCPN](http://opencpn.org).
+The output of dAISy can be processed and visualized by mapping and navigation programs like [OpenCPN](http://opencpn.org).
 
 All content of this project is published under CC BY-NC-SA - [Creative Commons Attribution-NonCommercial-ShareAlike](http://creativecommons.org/licenses/by-nc-sa/4.0/).  
 
