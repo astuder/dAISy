@@ -16,7 +16,7 @@
 // sync word for AIS
 #define AIS_SYNC_WORD		0x7e
 
-#define PH_TIMEOUT_PREAMBLE	32		// number of bits we wait for preamble before channel hop
+#define PH_TIMEOUT_PREAMBLE	6		// number of bits we wait for preamble to start before channel hop
 #define PH_TIMEOUT_START	16		// number of bits we wait for start flag before state machine reset
 
 // pins that packet handler uses to receive data
