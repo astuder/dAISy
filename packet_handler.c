@@ -16,6 +16,9 @@
 // sync word for AIS
 #define AIS_SYNC_WORD		0x7e
 
+#define PH_TIMEOUT_PREAMBLE	32		// number of bits we wait for preamble before channel hop
+#define PH_TIMEOUT_START	16		// number of bits we wait for start flag before state machine reset
+
 // pins that packet handler uses to receive data
 #define	PH_DATA_CLK_PIN		BIT2	// 2.2 RX data clock
 #define PH_DATA_PIN			BIT3	// 2.3 RX data
@@ -46,8 +49,8 @@
 
 volatile uint8_t ph_state = PH_STATE_OFF;
 volatile uint8_t ph_last_error = PH_ERROR_NONE;
-
-uint8_t ph_error_counts[PH_ERROR_CRC+1];
+volatile uint8_t ph_radio_channel = 0;
+volatile uint8_t ph_message_type = 0;
 
 // setup packet handler
 void ph_setup(void)
@@ -66,14 +69,27 @@ void ph_start(void)
 	PH_DATA_IE |= PH_DATA_CLK_PIN;
 	_BIS_SR(GIE);      			// enable interrupts
 
-	// transition radio into receive state
-#ifndef TEST
-	radio_start_rx(0, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
-#endif
-
 	// reset packet handler state machine
 	ph_last_error = PH_ERROR_NONE;
 	ph_state = PH_STATE_RESET;
+	ph_radio_channel = 0;
+
+	// start radio
+#ifndef TEST
+	radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+#endif
+}
+
+void ph_loop(void)
+{
+	// change radio channel when indicated by packet handler state machine
+	if (ph_state == PH_STATE_HOP) {
+		ph_radio_channel ^= 1;				// toggle radio channel between 0 and 1
+		ph_state = PH_STATE_RESET;
+#ifndef TEST
+		radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+#endif
+	}
 }
 
 // interrupt handler for receiving raw modem data via DATA/DATA_CLK pins
@@ -85,24 +101,26 @@ __interrupt void ph_irq_handler(void)
 	static uint16_t rx_crc;						// word for AIS payload CRC calculation
 	static uint8_t rx_one_count;				// counter of 1's to identify stuff bits
 	static uint8_t rx_data_byte;				// byte to receive actual package data
-	static uint8_t rx_prev_bit;					// previous bit for NRZI decoding
-	uint8_t rx_this_bit, rx_bit;				// temporary store for bits
+	uint8_t rx_this_bit_NRZI;					// current bit for NRZI decoding
+	static uint8_t rx_prev_bit_NRZI;			// previous bit for NRZI decoding
+	uint8_t rx_bit;								// current decoded bit
+	static uint8_t rx_prev_bit;					// previous decoded bit (for preamble detection)
 
 	if (PH_DATA_IFG & PH_DATA_CLK_PIN) {		// verify this interrupt is from DATA_CLK/GPIO_2 pin
 
-		if (PH_DATA_IN & PH_DATA_PIN)	{		// read bit and decode NRZI
-			rx_this_bit = 1;
-		} else {
-			rx_this_bit = 0;
-		}
-		rx_bit = !(rx_prev_bit ^ rx_this_bit); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
-		rx_prev_bit = rx_this_bit;
+		// read data bit and decode NRZI
+		if (PH_DATA_IN & PH_DATA_PIN)						// read encoded data bit from line
+			rx_this_bit_NRZI = 1;
+		else
+			rx_this_bit_NRZI = 0;
 
-		rx_bitstream >>= 1;						// add bit to bit-stream (receiving LSB first)
+		rx_bit = !(rx_prev_bit_NRZI ^ rx_this_bit_NRZI); 	// NRZI decoding: change = 0-bit, no change = 1-bit, i.e. 00,11=>1, 01,10=>0, i.e. NOT(A XOR B)
+		rx_prev_bit_NRZI = rx_this_bit_NRZI;				// store encoded bit for next round of decoding
+
+		// add decoded bit to bit-stream (receiving LSB first)
+		rx_bitstream >>= 1;
 		if (rx_bit)
-		{
 			rx_bitstream |= 0x8000;
-		}
 
 		// packet handler state machine
 		switch (ph_state) {
@@ -110,9 +128,10 @@ __interrupt void ph_irq_handler(void)
 			break;
 
 		case PH_STATE_RESET:								// state: reset, prepare state machine for next packet
-			ph_error_counts[ph_last_error]++;				// keep some stats about errors
 			rx_bitstream = 0;								// reset bit-stream
+			rx_bit_count = 0;								// reset bit counter
 			fifo_new_packet();								// reset fifo packet
+			fifo_write_byte(ph_radio_channel);				// indicate channel for this packet
 			// TODO: wakeup main thread from low-power mode to allow for error reporting
 			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
 			break;
@@ -121,7 +140,18 @@ __interrupt void ph_irq_handler(void)
 			if (rx_bitstream == 0x5555) {					// if we found 16 alternating bits
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_WAIT_FOR_START;			// next state: wait for start flag
+				break;
 			}
+
+			rx_bit_count++;									// increase bit counter
+			if (rx_bit_count > PH_TIMEOUT_PREAMBLE)	{		// if we reached preamble timeout
+				if (!(rx_bit ^ rx_prev_bit)) {				// and there's no preamble in progress, i.e. two identical bits in a row
+					ph_state = PH_STATE_HOP;				// indicate packet handler loop to initiate hop
+					// TODO: wakeup main thread from low-power mode to do hopping
+					break;
+				}
+			}
+
 			break;
 
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
@@ -131,11 +161,13 @@ __interrupt void ph_irq_handler(void)
 				break;
 			}
 
-			rx_bit_count++;									// else increase bit counter
-			if (rx_bit_count > 24) {						// if start flag was not found within more than 24 bits of preamble
+			rx_bit_count++;									// increase bit counter
+			if (rx_bit_count > PH_TIMEOUT_START) {			// if start flag is not found within a certain number of bits
 				ph_last_error = PH_ERROR_NOSTART;			// report missing start flag error
 				ph_state = PH_STATE_RESET;					// reset state machine
+				break;
 			}
+
 			break;
 
 		case PH_STATE_PREFETCH:								// state: pre-fill receive buffer with 8 bits
@@ -146,6 +178,7 @@ __interrupt void ph_irq_handler(void)
 				rx_data_byte = 0;							// reset buffer for data byte
 				rx_crc = 0xffff;							// init CRC calculation
 				ph_state = PH_STATE_RECEIVE_PACKET;			// next state: receive and process packet
+				ph_message_type = rx_bitstream >> 10;		// store AIS message type for debugging
 				break;
 			}
 
@@ -168,8 +201,8 @@ __interrupt void ph_irq_handler(void)
 			if (rx_bit) {									// if current bit is a 1
 				rx_one_count++;								// count 1's to identify stuff bit
 				rx_bit = 1;									// avoid shifting for CRC
-			}
-			else rx_one_count = 0;							// or reset stuff-bit counter
+			} else
+				rx_one_count = 0;							// or reset stuff-bit counter
 
 			if (rx_bit ^ (rx_crc & 0x0001))					// CCITT CRC calculation (according to Dr. Dobbs)
 				rx_crc = (rx_crc >> 1) ^ 0x8408;
@@ -201,7 +234,14 @@ __interrupt void ph_irq_handler(void)
 			}
 
 			break;
+
+		case PH_STATE_HOP:									// state: waiting for radio channel hop
+			// nothing to do, ph_loop() will push me out of this state
+			break;
+
 		}
+
+		rx_prev_bit = rx_bit;								// store last bit for future use (e.g. preamble detection)
 	}
 
 	PH_DATA_IFG = 0;							// clear all pin interrupt flags
@@ -229,6 +269,15 @@ uint8_t ph_get_last_error(void)
 	uint8_t error = ph_last_error;
 	ph_last_error = PH_ERROR_NONE;			// clear error
 	return error;
+}
+
+uint8_t ph_get_radio_channel(void)
+{
+	return ph_radio_channel;
+}
+uint8_t ph_get_message_type(void)
+{
+	return ph_message_type;
 }
 
 #ifdef TEST

@@ -19,11 +19,11 @@
 
 #define DEBUG_MESSAGES			// un-comment to send error messages over UART
 
+// LED helpers for debugging
 #define LED1	BIT0
-
-#define LED_ON		P1OUT |= LED1
-#define LED_OFF 	P1OUT &= ~LED1
-#define LED_TOGGLE	P1OUT ^= LED1
+#define LED1_ON		P1OUT |= LED1
+#define LED1_OFF 	P1OUT &= ~LED1
+#define LED1_TOGGLE	P1OUT ^= LED1
 
 #ifdef TEST
 void test_main(void);
@@ -53,7 +53,7 @@ int main(void)
 
 	// configure LED1 and turn it off, we'll use that for error and other stuff
 	P1DIR |= LED1;
-	LED_OFF;
+	LED1_OFF;
 
 	// setup uart
 	uart_init();
@@ -65,11 +65,14 @@ int main(void)
 	radio_setup();
 	radio_configure();
 
+	// self-calibrate image rejection
+	radio_calibrate_ir();
+
 	// verify that radio configuration was successful
 	radio_get_chip_status(0);
 	if (radio_buffer.chip_status.chip_status & RADIO_CMD_ERROR) {	// check for command error
 		while (1) {
-			LED_TOGGLE;
+			LED1_TOGGLE;
 			_delay_cycles(8000000);			// blink LED if there was an error
 		}
 	}
@@ -87,24 +90,33 @@ int main(void)
 
 	while (1) {
 
+		ph_loop();	// packet handler house-keeping, e.g. channel hopping
+
 #ifdef DEBUG_MESSAGES
+		uint8_t channel;
+		int16_t rssi;
 		// debug code to monitor signal strength (RSSI)
 		current_state = ph_get_state();
 		if (current_state != previous_state) {
 			switch(current_state) {
 			case PH_STATE_PREFETCH:																// found preamble and start flag
-				// report current signal strength
-				radio_get_modem_status(0);														// check modem for current RSSI
-				int16_t rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+				// report current channel and signal strength
+				channel = ph_get_radio_channel();												// read current channel
+				radio_get_modem_status(0);														// read current RSSI from modem
+				rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;			// calculate dBm: RSSI / 2 - RSSI_COMP - 70
 				dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
 				str_output_buffer[4] = 0;														// terminate string
-				uart_send_string("sync RSSI=");													// send message to UART
+				uart_send_string("sync ");														// send debug message to UART
+				uart_send_byte(channel + 'A');
+				uart_send_string(" RSSI=");
 				uart_send_string(str_output_buffer);
 				uart_send_string("dBm\r\n");
+				ph_loop();							// house keeping, sending over UART takes time
 				break;
 			}
 			previous_state = current_state;
 		}
+
 #endif
 
 		// retrieve last packet handler error
@@ -120,11 +132,12 @@ int main(void)
 			else if (error == PH_ERROR_CRC)
 				uart_send_string("CRC error");
 			uart_send_string("\r\n");
+			ph_loop();							// house keeping, sending over UART takes time
 		}
 #else
 		// toggle LED if packet handler failed after finding preamble and start flag
 		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)
-			LED_TOGGLE;
+			LED1_TOGGLE;
 #endif
 
 		// check if a new valid packet arrived

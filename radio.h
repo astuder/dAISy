@@ -12,6 +12,7 @@
 // functions to start up / reset chip
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
 void radio_configure(void);							// configure radio using radio_config_Si4362.h
+void radio_calibrate_ir(void);						// run image rejection self-calibration (takes approx. 250ms)
 
 void radio_shutdown(void);							// turn off radio
 

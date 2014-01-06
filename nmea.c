@@ -40,6 +40,8 @@ void nmea_process_packet(void)
 
 	packet_size -= 2;							// ignore last two bytes (AIS CRC)
 
+	uint8_t radio_channel = fifo_read_byte() + 'A';	// retrieve radio channel (0=A, 1=B)
+
 	// calculate number of fragments, NMEA allows 82 characters per sentence
 	//			-> max 62 6-bit characters payload
 	//			-> max 46 AIS bytes (368 bits) per sentence
@@ -77,8 +79,8 @@ void nmea_process_packet(void)
 			nmea_push_char(nmea_message_id + '0');
 		nmea_push_char(',');
 
-		// write channel information (currently hard coded)
-		nmea_push_char('A');
+		// write channel information
+		nmea_push_char(radio_channel);
 		nmea_push_char(',');
 
 		// encode and write next 46 bytes from AIS packet
@@ -188,6 +190,7 @@ uint8_t test_nmea_verify_packet(const char* message)
 		return 0;		// error, no data to verify
 
 	packet_size -= 2;	// ignore CRC
+	fifo_read_byte();	// discard radio channel
 
 	// encode message into nmea_buffer
 	nmea_buffer_index = 0;
