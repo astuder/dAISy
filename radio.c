@@ -23,7 +23,7 @@
 #define GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
 #define GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
 #define SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
-#define NIRQ		BIT5	// 2.5 condifurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
+#define NIRQ		BIT5	// 2.5 configurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
 
 #define CTS			GPIO_1	// when low, chip is busy/not ready
 
@@ -180,6 +180,12 @@ void radio_start_rx(uint8_t channel, uint8_t start_condition, uint16_t rx_length
 	radio_buffer.data[5] = rx_valid_state;
 	radio_buffer.data[6] = rx_invalid_state;
 	send_command(CMD_START_RX, radio_buffer.data, 7, 0);
+}
+
+// wait for radio to complete previous command
+void radio_wait_for_CTS(void)
+{
+	while (!RADIO_READY);				// wait for radio to be ready before returning
 }
 
 // read radio state

@@ -16,6 +16,8 @@ void radio_calibrate_ir(void);						// run image rejection self-calibration (tak
 
 void radio_shutdown(void);							// turn off radio
 
+void radio_wait_for_CTS(void);						// waits until radio completed previous command, e.g. to wait for RX to start
+
 // helpers
 void radio_debug(void);								// debug code, reading chip status, version etc.
 
