@@ -82,13 +82,11 @@ int main(void)
 
 #ifdef DEBUG_MESSAGES
 	uart_send_string("dAISy 0.2 started\r\n");
-
-	// some information
-	uint8_t current_state;
-	uint8_t previous_state = ph_get_state();
 #endif
 
 	while (1) {
+
+		__low_power_mode_4();	// deep sleep until something worthwhile happens
 
 		ph_loop();	// packet handler house-keeping, e.g. channel hopping
 
@@ -96,27 +94,12 @@ int main(void)
 		uint8_t channel;
 		int16_t rssi;
 		// debug code to monitor signal strength (RSSI)
-		current_state = ph_get_state();
-		if (current_state != previous_state) {
-			switch(current_state) {
-			case PH_STATE_PREFETCH:																// found preamble and start flag
-				// report current channel and signal strength
-				channel = ph_get_radio_channel();												// read current channel
-				radio_get_modem_status(0);														// read current RSSI from modem
-				rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;			// calculate dBm: RSSI / 2 - RSSI_COMP - 70
-				dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
-				str_output_buffer[4] = 0;														// terminate string
-				uart_send_string("sync ");														// send debug message to UART
-				uart_send_byte(channel + 'A');
-				uart_send_string(" RSSI=");
-				uart_send_string(str_output_buffer);
-				uart_send_string("dBm\r\n");
-				ph_loop();							// house keeping, sending over UART takes time
-				break;
-			}
-			previous_state = current_state;
+		if (ph_get_state() == PH_STATE_PREFETCH) {												// found preamble and start flag
+			// record current channel and signal strength
+			channel = ph_get_radio_channel();												// read current channel
+			radio_get_modem_status(0);														// read current RSSI from modem
+			rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;			// calculate dBm: RSSI / 2 - RSSI_COMP - 70
 		}
-
 #endif
 
 		// retrieve last packet handler error
@@ -124,6 +107,13 @@ int main(void)
 #ifdef DEBUG_MESSAGES
 		// report error if packet handler failed after finding preamble and start flag
 		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)	{
+			dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
+			str_output_buffer[4] = 0;														// terminate string
+			uart_send_string("sync ");														// send debug message to UART
+			uart_send_byte(channel + 'A');
+			uart_send_string(" RSSI=");
+			uart_send_string(str_output_buffer);
+			uart_send_string("dBm\r\n");
 			uart_send_string("error: ");
 			if (error == PH_ERROR_NOEND)
 				uart_send_string("no end flag");
@@ -143,14 +133,25 @@ int main(void)
 		// check if a new valid packet arrived
 		uint16_t size = fifo_get_packet();
 		if (size > 0) {								// if so, process packet
+
+#ifdef DEBUG_MESSAGES
+			dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
+			str_output_buffer[4] = 0;														// terminate string
+			uart_send_string("sync ");														// send debug message to UART
+			uart_send_byte(channel + 'A');
+			uart_send_string(" RSSI=");
+			uart_send_string(str_output_buffer);
+			uart_send_string("dBm\r\n");
+#endif
+
 			nmea_process_packet();					// process packet (NMEA message will be sent over UART)
 			fifo_remove_packet();					// remove processed packet from FIFO
 		}
 
 		// enter low power mode LPM0 (everything off)
 		// TODO: wait for UART to complete transmission
+
 		// TODO: suspend UART
-		// TODO: enter low power mode
 	}
 }
 
@@ -220,14 +221,14 @@ void test_packet_handler(const char* message)
 void test_error(void)
 {
 	while (1) {
-		LED_TOGGLE;
+		LED1_TOGGLE;
 		_delay_cycles(8000000);			// blink LED if there was an error
 	}
 }
 
 #endif
 
-// handler for unuxpected interrupts
+// handler for unexpected interrupts
 #pragma vector=ADC10_VECTOR,COMPARATORA_VECTOR,NMI_VECTOR,PORT1_VECTOR,	\
 			   TIMER0_A0_VECTOR,TIMER0_A1_VECTOR,TIMER1_A0_VECTOR,TIMER1_A1_VECTOR,		\
 			   USCIAB0RX_VECTOR,USCIAB0TX_VECTOR,WDT_VECTOR

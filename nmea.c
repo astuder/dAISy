@@ -189,7 +189,7 @@ uint8_t test_nmea_verify_packet(const char* message)
 	if (!message || packet_size == 0)
 		return 0;		// error, no data to verify
 
-	packet_size -= 2;	// ignore CRC
+	packet_size -= 3;	// ignore CRC and readio channel
 	fifo_read_byte();	// discard radio channel
 
 	// encode message into nmea_buffer

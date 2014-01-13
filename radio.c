@@ -115,6 +115,8 @@ void radio_configure(void)
 // invoke radio image rejection self-calibration
 void radio_calibrate_ir(void)
 {
+	// send calibration sequence as per datasheet
+	// note: looking at si446x_ircal.c in provided examples, CMD_IRCAL has 3 undocumented return values CAL_STATE, RSSI, DIR_CH
 	send_command(CMD_IRCAL, radio_ircal_sequence_coarse, sizeof(radio_ircal_sequence_coarse), 0);
 	send_command(CMD_IRCAL, radio_ircal_sequence_fine, sizeof(radio_ircal_sequence_fine), 0);
 	while (!RADIO_READY);						// wait for calibration to complete

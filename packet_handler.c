@@ -13,6 +13,12 @@
 #include "fifo.h"
 #include "packet_handler.h"
 
+// LED helpers for debugging
+#define LED1	BIT0
+#define LED1_ON		P1OUT |= LED1
+#define LED1_OFF 	P1OUT &= ~LED1
+#define LED1_TOGGLE	P1OUT ^= LED1
+
 // sync word for AIS
 #define AIS_SYNC_WORD		0x7e
 
@@ -69,15 +75,16 @@ void ph_start(void)
 	PH_DATA_IE |= PH_DATA_CLK_PIN;
 	_BIS_SR(GIE);      			// enable interrupts
 
-	// reset packet handler state machine
-	ph_last_error = PH_ERROR_NONE;
-	ph_state = PH_STATE_RESET;
-	ph_radio_channel = 0;
-
-	// start radio
+	// start radio, wait until it's spun up
 #ifndef TEST
 	radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+	radio_wait_for_CTS();
 #endif
+
+	// reset packet handler state machine
+	ph_last_error = PH_ERROR_NONE;
+	ph_radio_channel = 0;
+	ph_state = PH_STATE_RESET;
 }
 
 void ph_loop(void)
@@ -85,10 +92,11 @@ void ph_loop(void)
 	// change radio channel when indicated by packet handler state machine
 	if (ph_state == PH_STATE_HOP) {
 		ph_radio_channel ^= 1;				// toggle radio channel between 0 and 1
-		ph_state = PH_STATE_RESET;
 #ifndef TEST
 		radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
+		radio_wait_for_CTS();
 #endif
+		ph_state = PH_STATE_RESET;
 	}
 }
 
@@ -106,6 +114,8 @@ __interrupt void ph_irq_handler(void)
 	uint8_t rx_bit;								// current decoded bit
 	static uint8_t rx_prev_bit;					// previous decoded bit (for preamble detection)
 
+	uint8_t wake_up = 0;						// if set, LPM bits will be cleared
+
 	if (PH_DATA_IFG & PH_DATA_CLK_PIN) {		// verify this interrupt is from DATA_CLK/GPIO_2 pin
 
 		// read data bit and decode NRZI
@@ -119,8 +129,12 @@ __interrupt void ph_irq_handler(void)
 
 		// add decoded bit to bit-stream (receiving LSB first)
 		rx_bitstream >>= 1;
-		if (rx_bit)
+		if (rx_bit) {
+			LED1_ON;
 			rx_bitstream |= 0x8000;
+		} else {
+			LED1_OFF;
+		}
 
 		// packet handler state machine
 		switch (ph_state) {
@@ -128,43 +142,44 @@ __interrupt void ph_irq_handler(void)
 			break;
 
 		case PH_STATE_RESET:								// state: reset, prepare state machine for next packet
-			rx_bitstream = 0;								// reset bit-stream
+			rx_bitstream &= 8000;							// reset bit-stream (but don't throw away incoming bit)
 			rx_bit_count = 0;								// reset bit counter
 			fifo_new_packet();								// reset fifo packet
 			fifo_write_byte(ph_radio_channel);				// indicate channel for this packet
-			// TODO: wakeup main thread from low-power mode to allow for error reporting
 			ph_state = PH_STATE_WAIT_FOR_PREAMBLE;			// next state: wait for training sequence
 			break;
 
-		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 16 bit of training sequence (01010..)
-			if (rx_bitstream == 0x5555) {					// if we found 16 alternating bits
+		case PH_STATE_WAIT_FOR_PREAMBLE:					// state: waiting for at least 12 bit of training sequence (01010..)
+			if ((rx_bitstream & 0xfff0) == 0x5550) {		// if we found 12 alternating bits
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_WAIT_FOR_START;			// next state: wait for start flag
 				break;
 			}
 
 			rx_bit_count++;									// increase bit counter
+
 			if (rx_bit_count > PH_TIMEOUT_PREAMBLE)	{		// if we reached preamble timeout
 				if (!(rx_bit ^ rx_prev_bit)) {				// and there's no preamble in progress, i.e. two identical bits in a row
 					ph_state = PH_STATE_HOP;				// indicate packet handler loop to initiate hop
-					// TODO: wakeup main thread from low-power mode to do hopping
+					wake_up = 1;							// wake up main thread from low-power mode to do hopping and error reporting
 					break;
 				}
 			}
-
 			break;
 
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
 			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the start flag
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_PREFETCH;				// next state: start receiving packet
+				wake_up = 1;								// to record RSSI
 				break;
 			}
 
 			rx_bit_count++;									// increase bit counter
 			if (rx_bit_count > PH_TIMEOUT_START) {			// if start flag is not found within a certain number of bits
 				ph_last_error = PH_ERROR_NOSTART;			// report missing start flag error
-				ph_state = PH_STATE_RESET;					// reset state machine
+				ph_state = PH_STATE_HOP;					// indicate packet handler loop to initiate hop
+				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
 				break;
 			}
 
@@ -190,7 +205,8 @@ __interrupt void ph_irq_handler(void)
 			if (rx_one_count == 5) {						// if we expect a stuff-bit..
 				if (rx_bit) {								// if stuff bit is not zero the packet is invalid
 					ph_last_error = PH_ERROR_STUFFBIT;		// report invalid stuff-bit error
-					ph_state = PH_STATE_RESET;				// restart state machine
+					ph_state = PH_STATE_HOP;				// restart state machine
+					wake_up = 1;							// wake up main thread from low-power mode to do hopping and error reporting
 				} else
 					rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
 				break;
@@ -223,13 +239,15 @@ __interrupt void ph_irq_handler(void)
 					fifo_commit_packet();					// else commit packet in FIFO
 					// TODO: wakeup main thread from low-power mode
 				}
-				ph_state = PH_STATE_RESET;					// restart state machine
+				ph_state = PH_STATE_HOP;					// restart state machine
+				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
 				break;
 			}
 
 			if (rx_bit_count > 1020) {						// if packet is too long, it's probably invalid
 				ph_last_error = PH_ERROR_NOEND;				// report error
-				ph_state = PH_STATE_RESET;					// reset state machine
+				ph_state = PH_STATE_HOP;					// reset state machine
+				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
 				break;
 			}
 
@@ -237,12 +255,18 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_HOP:									// state: waiting for radio channel hop
 			// nothing to do, ph_loop() will push me out of this state
+			wake_up = 1;									// main thread should be awake and working, but just to make sure
+#ifdef TEST
+			ph_state = PH_STATE_RESET;						// no one to push in test mode
+#endif
 			break;
-
 		}
 
 		rx_prev_bit = rx_bit;								// store last bit for future use (e.g. preamble detection)
 	}
+
+	if (wake_up)
+		__low_power_mode_off_on_exit();
 
 	PH_DATA_IFG = 0;							// clear all pin interrupt flags
 }
