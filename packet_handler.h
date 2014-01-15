@@ -22,8 +22,7 @@ enum PH_STATE {
 	PH_STATE_WAIT_FOR_PREAMBLE,		// wait for preamble (010101..)
 	PH_STATE_WAIT_FOR_START,		// wait for start flag (0x7e)
 	PH_STATE_PREFETCH,				// receive first 8 bits of packet
-	PH_STATE_RECEIVE_PACKET,		// receive packet payload
-	PH_STATE_HOP					// radio waits for a hop
+	PH_STATE_RECEIVE_PACKET			// receive packet payload
 };
 
 // packet handler errors
@@ -38,6 +37,7 @@ enum PH_ERROR {
 uint8_t ph_get_state(void);			// get current state of packet handler
 uint8_t ph_get_last_error(void);	// get last packet handler error, will clear error
 uint8_t ph_get_radio_channel(void);	// get current radio channel
+int16_t ph_get_radio_rssi(void);	// get RSSI in dBm at last sync
 uint8_t ph_get_message_type(void);	// get last AIS message type
 
 // functions to test packet handler operation, DISCONNECT MODEM BEFORE TESTING!

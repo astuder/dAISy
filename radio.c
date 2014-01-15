@@ -184,6 +184,12 @@ void radio_start_rx(uint8_t channel, uint8_t start_condition, uint16_t rx_length
 	send_command(CMD_START_RX, radio_buffer.data, 7, 0);
 }
 
+// check whether radio is ready
+uint8_t radio_ready(void)
+{
+	return RADIO_READY;
+}
+
 // wait for radio to complete previous command
 void radio_wait_for_CTS(void)
 {

@@ -57,6 +57,7 @@ volatile uint8_t ph_state = PH_STATE_OFF;
 volatile uint8_t ph_last_error = PH_ERROR_NONE;
 volatile uint8_t ph_radio_channel = 0;
 volatile uint8_t ph_message_type = 0;
+volatile int16_t ph_rssi = 0;
 
 // setup packet handler
 void ph_setup(void)
@@ -70,11 +71,6 @@ void ph_setup(void)
 // start packet handler operation, including ISR
 void ph_start(void)
 {
-	// enable interrupt on positive edge of pin wired to DATA_CLK (GPIO2 as configured in radio_config.h)
-	PH_DATA_IES &= ~PH_DATA_CLK_PIN;
-	PH_DATA_IE |= PH_DATA_CLK_PIN;
-	_BIS_SR(GIE);      			// enable interrupts
-
 	// start radio, wait until it's spun up
 #ifndef TEST
 	radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
@@ -85,19 +81,18 @@ void ph_start(void)
 	ph_last_error = PH_ERROR_NONE;
 	ph_radio_channel = 0;
 	ph_state = PH_STATE_RESET;
+
+	// enable interrupt on positive edge of pin wired to DATA_CLK (GPIO2 as configured in radio_config.h)
+	PH_DATA_IES &= ~PH_DATA_CLK_PIN;
+	PH_DATA_IE |= PH_DATA_CLK_PIN;
+	_BIS_SR(GIE);      			// enable interrupts
+
+	// ISR is now running and will operate radio, don't call radio library until ph ISR is stopped.
 }
 
 void ph_loop(void)
 {
-	// change radio channel when indicated by packet handler state machine
-	if (ph_state == PH_STATE_HOP) {
-		ph_radio_channel ^= 1;				// toggle radio channel between 0 and 1
-#ifndef TEST
-		radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
-		radio_wait_for_CTS();
-#endif
-		ph_state = PH_STATE_RESET;
-	}
+	// nothing to do here right now
 }
 
 // interrupt handler for receiving raw modem data via DATA/DATA_CLK pins
@@ -116,7 +111,8 @@ __interrupt void ph_irq_handler(void)
 
 	uint8_t wake_up = 0;						// if set, LPM bits will be cleared
 
-	if (PH_DATA_IFG & PH_DATA_CLK_PIN) {		// verify this interrupt is from DATA_CLK/GPIO_2 pin
+	if ((PH_DATA_IFG & PH_DATA_CLK_PIN)			// verify this interrupt is from DATA_CLK/GPIO_2 pin
+			&& radio_ready()) {						// and only process data received while radio ready
 
 		// read data bit and decode NRZI
 		if (PH_DATA_IN & PH_DATA_PIN)						// read encoded data bit from line
@@ -160,8 +156,7 @@ __interrupt void ph_irq_handler(void)
 
 			if (rx_bit_count > PH_TIMEOUT_PREAMBLE)	{		// if we reached preamble timeout
 				if (!(rx_bit ^ rx_prev_bit)) {				// and there's no preamble in progress, i.e. two identical bits in a row
-					ph_state = PH_STATE_HOP;				// indicate packet handler loop to initiate hop
-					wake_up = 1;							// wake up main thread from low-power mode to do hopping and error reporting
+					ph_state = PH_STATE_RESET;				// reset state machine
 					break;
 				}
 			}
@@ -169,17 +164,20 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
 			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the start flag
+				// TODO: use fast access registers instead of modem_status
+				radio_get_modem_status(0);					// read current RSSI from modem, takes ~40us
+				ph_rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_PREFETCH;				// next state: start receiving packet
-				wake_up = 1;								// to record RSSI
+				wake_up = 1;								// main thread might want to do something on sync detect
 				break;
 			}
 
 			rx_bit_count++;									// increase bit counter
 			if (rx_bit_count > PH_TIMEOUT_START) {			// if start flag is not found within a certain number of bits
 				ph_last_error = PH_ERROR_NOSTART;			// report missing start flag error
-				ph_state = PH_STATE_HOP;					// indicate packet handler loop to initiate hop
-				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
+				ph_state = PH_STATE_RESET;					// reset state machine
 				break;
 			}
 
@@ -205,8 +203,7 @@ __interrupt void ph_irq_handler(void)
 			if (rx_one_count == 5) {						// if we expect a stuff-bit..
 				if (rx_bit) {								// if stuff bit is not zero the packet is invalid
 					ph_last_error = PH_ERROR_STUFFBIT;		// report invalid stuff-bit error
-					ph_state = PH_STATE_HOP;				// restart state machine
-					wake_up = 1;							// wake up main thread from low-power mode to do hopping and error reporting
+					ph_state = PH_STATE_RESET;				// reset state machine
 				} else
 					rx_one_count = 0;						// else ignore bit and reset stuff-bit counter
 				break;
@@ -237,32 +234,27 @@ __interrupt void ph_irq_handler(void)
 					ph_last_error = PH_ERROR_CRC;			// report CRC error
 				else {
 					fifo_commit_packet();					// else commit packet in FIFO
-					// TODO: wakeup main thread from low-power mode
 				}
-				ph_state = PH_STATE_HOP;					// restart state machine
-				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
+				ph_state = PH_STATE_RESET;					// reset state machine
 				break;
 			}
 
 			if (rx_bit_count > 1020) {						// if packet is too long, it's probably invalid
 				ph_last_error = PH_ERROR_NOEND;				// report error
-				ph_state = PH_STATE_HOP;					// reset state machine
-				wake_up = 1;								// wake up main thread from low-power mode to do hopping and error reporting
+				ph_state = PH_STATE_RESET;					// reset state machine
 				break;
 			}
 
 			break;
-
-		case PH_STATE_HOP:									// state: waiting for radio channel hop
-			// nothing to do, ph_loop() will push me out of this state
-			wake_up = 1;									// main thread should be awake and working, but just to make sure
-#ifdef TEST
-			ph_state = PH_STATE_RESET;						// no one to push in test mode
-#endif
-			break;
 		}
 
 		rx_prev_bit = rx_bit;								// store last bit for future use (e.g. preamble detection)
+
+		if (ph_state == PH_STATE_RESET) {					// if next state is reset
+			ph_radio_channel ^= 1;							// toggle radio channel between 0 and 1
+			radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE); // initiate channel hop
+			wake_up = 1;									// wake up main thread for packet processing and error reporting
+		}
 	}
 
 	if (wake_up)
@@ -274,11 +266,12 @@ __interrupt void ph_irq_handler(void)
 // stop receiving and processing packets
 void ph_stop(void)
 {
-	// disable interrupt on pin wired to GPIO2
-	PH_DATA_IE &= ~PH_DATA_CLK_PIN;
+	PH_DATA_IE &= ~PH_DATA_CLK_PIN;				// disable interrupt on pin wired to GPIO2
+	ph_state = PH_STATE_OFF;					// turn off packet handler state machine
 
-	// transition radio from RX to READY
-	radio_change_state(RADIO_STATE_READY);
+	// ISR is no longer invoked, it's now save to do radio operations
+
+	radio_change_state(RADIO_STATE_READY);		// transition radio from RX to READY
 }
 
 // get current state of packet handler state machine
@@ -299,6 +292,12 @@ uint8_t ph_get_radio_channel(void)
 {
 	return ph_radio_channel;
 }
+
+int16_t ph_get_radio_rssi(void)
+{
+	return ph_rssi;
+}
+
 uint8_t ph_get_message_type(void)
 {
 	return ph_message_type;

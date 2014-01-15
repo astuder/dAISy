@@ -94,11 +94,10 @@ int main(void)
 		uint8_t channel;
 		int16_t rssi;
 		// debug code to monitor signal strength (RSSI)
-		if (ph_get_state() == PH_STATE_PREFETCH) {												// found preamble and start flag
+		if (ph_get_state() == PH_STATE_PREFETCH) {											// found preamble and start flag
 			// record current channel and signal strength
 			channel = ph_get_radio_channel();												// read current channel
-			radio_get_modem_status(0);														// read current RSSI from modem
-			rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;			// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+			rssi = ph_get_radio_rssi();														// read current RSSI
 		}
 #endif
 
