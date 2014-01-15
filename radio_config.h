@@ -107,7 +107,8 @@
 // FRR_CTL_C_MODE - Set the data that is present in fast response register C.
 // FRR_CTL_D_MODE - Set the data that is present in fast response register D.
 */
-#define RF_FRR_CTL_A_MODE_4 0x11, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00
+//#define RF_FRR_CTL_A_MODE_4 0x11, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00
+#define RF_FRR_CTL_A_MODE_4 0x11, 0x02, 0x04, 0x00, 0x0A, 0x00, 0x00, 0x00			// latched RSSI in FRR A
 
 /*
 // Set properties: RF_PREAMBLE_TX_LENGTH_9

@@ -112,7 +112,7 @@ __interrupt void ph_irq_handler(void)
 	uint8_t wake_up = 0;						// if set, LPM bits will be cleared
 
 	if ((PH_DATA_IFG & PH_DATA_CLK_PIN)			// verify this interrupt is from DATA_CLK/GPIO_2 pin
-			&& radio_ready()) {						// and only process data received while radio ready
+			&& RADIO_READY) {					// and only process data received while radio ready
 
 		// read data bit and decode NRZI
 		if (PH_DATA_IN & PH_DATA_PIN)						// read encoded data bit from line
@@ -164,9 +164,8 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_WAIT_FOR_START:						// state: wait for start flag 0x7e
 			if ((rx_bitstream & 0xff00) == 0x7e00) {		// if we found the start flag
-				// TODO: use fast access registers instead of modem_status
-				radio_get_modem_status(0);					// read current RSSI from modem, takes ~40us
-				ph_rssi = ((int) radio_buffer.modem_status.curr_rssi >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+				radio_frr_read('A', 1);						// read fetched RSSI from FRR
+				ph_rssi = ((int) radio_buffer.data[0] >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
 
 				rx_bit_count = 0;							// reset bit counter
 				ph_state = PH_STATE_PREFETCH;				// next state: start receiving packet

@@ -9,6 +9,16 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#define RADIO_GPIO_0		BIT0	// 2.0 configurable, e.g. sync word, high when detected
+#define RADIO_GPIO_1		BIT1	// 2.1 configurable, default is CTS - this library relies on this!
+#define RADIO_GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
+#define RADIO_GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
+#define RADIO_SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
+#define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
+
+#define RADIO_CTS			RADIO_GPIO_1	// when low, chip is busy/not ready
+#define RADIO_READY	(P2IN & RADIO_CTS)
+
 // functions to start up / reset chip
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
 void radio_configure(void);							// configure radio using radio_config_Si4362.h
@@ -16,7 +26,6 @@ void radio_calibrate_ir(void);						// run image rejection self-calibration (tak
 
 void radio_shutdown(void);							// turn off radio
 
-uint8_t radio_ready(void);							// check whether radio is ready
 void radio_wait_for_CTS(void);						// waits until radio completed previous command, e.g. to wait for RX to start
 
 // helpers
@@ -57,6 +66,10 @@ void radio_get_modem_status(						// read modem status, including RSSI, result i
 					uint8_t clr_pending);				// 0 = clear pending interrupts, set bits leave respective int pending
 
 void radio_request_device_state(void);				// read current device state, result in radio_buffer.device_state
+
+void radio_frr_read(								// read fast read registers, results in radio_buffer.data[0..3]
+					uint8_t frr,					// start register 'A', 'B', 'C' or 'D'
+					uint8_t count);					// number of registers to read (1-4)
 
 // data structures of various responses, access via radio_buffer.* after calling respective radio_get_* function
 
