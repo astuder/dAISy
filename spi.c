@@ -23,15 +23,9 @@ void spi_init(void)
 	// configure UCSI B0 for SPI
 	UCB0CTL1 |= UCSWRST;							// reset USCI B0
 	UCB0CTL0 = UCCKPH | UCMST | UCMSB | UCMODE_0 | UCSYNC;	// read on rising edge, inactive clk low, 8 bit, master mode, 3 pin SPI, synchronous
-	UCB0BR0 = 8; UCB0BR1 = 0;						// clock scaler = 2, i.e 8 MHz SPI clock (Si4362 max is 10 MHz)
+	UCB0BR0 = 2; UCB0BR1 = 0;						// clock scaler = 2, i.e 8 MHz SPI clock (Si4362 max is 10 MHz)
 	UCB0CTL1 = UCSSEL_2;							// clock source SMCLK, clear UCSWRST to enable USCI B0
 	UCB0CTL1 &= ~UCSWRST;							// enable USCI B0
 }
 
-uint8_t spi_transfer(const uint8_t data)
-{
-	UCB0TXBUF = data;
-	while (UCB0STAT & UCBUSY);
-	return UCB0RXBUF;
-}
 

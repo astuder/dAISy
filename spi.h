@@ -7,6 +7,12 @@
 #define SPI_H_
 
 void spi_init(void);
-uint8_t spi_transfer(const uint8_t data);
+
+inline uint8_t spi_transfer(const uint8_t data)
+{
+	UCB0TXBUF = data;
+	while (UCB0STAT & UCBUSY);
+	return UCB0RXBUF;
+}
 
 #endif /* SPI_H_ */
