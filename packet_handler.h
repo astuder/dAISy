@@ -19,8 +19,7 @@ void ph_stop(void);					// stop receiving packages
 enum PH_STATE {
 	PH_STATE_OFF = 0,
 	PH_STATE_RESET,					// reset/restart packet handler
-	PH_STATE_WAIT_FOR_PREAMBLE,		// wait for preamble (010101..)
-	PH_STATE_WAIT_FOR_START,		// wait for start flag (0x7e)
+	PH_STATE_WAIT_FOR_SYNC,			// wait for preamble (010101..) and start flag (0x7e)
 	PH_STATE_PREFETCH,				// receive first 8 bits of packet
 	PH_STATE_RECEIVE_PACKET			// receive packet payload
 };

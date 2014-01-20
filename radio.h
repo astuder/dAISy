@@ -17,7 +17,11 @@
 #define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
 
 #define RADIO_CTS			RADIO_GPIO_1	// when low, chip is busy/not ready
+#ifndef TEST
 #define RADIO_READY	(P2IN & RADIO_CTS)
+#else
+#define RADIO_READY (1)
+#endif
 
 // functions to start up / reset chip
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
