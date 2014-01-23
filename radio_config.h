@@ -356,7 +356,7 @@
 // MODEM_RSSI_CONTROL - Selects if the RSSI value is latched, and at what point in the packet it is latched. The Latched RSSI value may be read by a Fast Response Register, or returned by the GET_MODEM_STATUS command. Selects whether the RSSI value is updated every 1*Tb bit period, or whether the RSSI value is averaged over the previous 4*Tb bit periods. Selects if the Latched RSSI value is compared against the MODEM_RSSI_THRESH value, for the purpose of exiting to the RXTIMEOUT_STATE if below threshold.
 */
 //#define RF_MODEM_OOK_CNT1_11 0x11, 0x20, 0x0B, 0x42, 0x84, 0x03, 0xD6, 0x83, 0x00, 0xA4, 0x01, 0x80, 0xFF, 0x0C, 0x02        // 02 = latch RSSI when sync word detected
-#define RF_MODEM_OOK_CNT1_11 0x11, 0x20, 0x0B, 0x42, 0x84, 0x03, 0xD6, 0x83, 0x00, 0xA4, 0x01, 0x80, 0x58, 0x0C, 0x03        // 03 = latch RSSI 4*Tb, RSSI threshold at -100db
+#define RF_MODEM_OOK_CNT1_11 0x11, 0x20, 0x0B, 0x42, 0x84, 0x03, 0xD6, 0x83, 0x00, 0xA4, 0x01, 0x80, 0x58, 0x0C, 0x03        // 03 = latch RSSI 4*Tb, RSSI threshold at -90dBm
 
 /*
 // Set properties: RF_MODEM_RSSI_COMP_1

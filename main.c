@@ -114,12 +114,20 @@ int main(void)
 			uart_send_string(str_output_buffer);
 			uart_send_string("dBm\r\n");
 			uart_send_string("error: ");
-			if (error == PH_ERROR_NOEND)
+			switch (error) {
+			case PH_ERROR_NOEND:
 				uart_send_string("no end flag");
-			else if (error == PH_ERROR_STUFFBIT)
+				break;
+			case PH_ERROR_STUFFBIT:
 				uart_send_string("invalid stuff bit");
-			else if (error == PH_ERROR_CRC)
+				break;
+			case PH_ERROR_CRC:
 				uart_send_string("CRC error");
+				break;
+			case PH_ERROR_RSSI_DROP:
+				uart_send_string("RSSI drop");
+				break;
+			}
 			uart_send_string("\r\n");
 			ph_loop();							// house keeping, sending over UART takes time
 		}

@@ -14,7 +14,7 @@
 #define RADIO_GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
 #define RADIO_GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
 #define RADIO_SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
-#define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. preamble, high when detected (for debug only, use sync word for actual package detection)
+#define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. CCA, high when RSSI exceeding threshold
 
 #define RADIO_CTS			RADIO_GPIO_1	// when low, chip is busy/not ready
 #ifndef TEST
@@ -22,6 +22,17 @@
 #else
 #define RADIO_READY (1)
 #endif
+
+#define RADIO_CCA			RADIO_NIRQ		// when high, signal strength exceeds RSSI threshold
+#ifndef TEST
+#define RADIO_SIGNAL (P2IN & RADIO_CCA)
+#else
+#define RADIO_SIGNAL (1)
+#endif
+
+// convert RSSI to dBm: RSSI / 2 - RSSI_COMP - 70 and vice versa
+#define RADIO_RSSI_TO_DBM(val) (((int) val >> 1) - 0x40 - 70)
+#define RADIO_DBM_TO_RSSI(val) ((val + 70 + 0x40) << 1)
 
 // functions to start up / reset chip
 void radio_setup(void);								// set up MSP430 pins and SPI for interfacing w/ radio
@@ -74,6 +85,11 @@ void radio_request_device_state(void);				// read current device state, result i
 void radio_frr_read(								// read fast read registers, results in radio_buffer.data[0..3]
 					uint8_t frr,					// start register 'A', 'B', 'C' or 'D'
 					uint8_t count);					// number of registers to read (1-4)
+
+void radio_set_property(							// directly set individual radio property
+					uint8_t prop_group,				// property group, e.g. 0x20 for MODEM
+					uint8_t prop_num,				// property number, e.g. 0x4a for RSSI threshold
+					uint8_t value);					// property value, e.g. RADIO_DBM_TO_RSSI(-80)
 
 // data structures of various responses, access via radio_buffer.* after calling respective radio_get_* function
 

@@ -19,11 +19,13 @@
 #define LED1_OFF 	P1OUT &= ~LED1
 #define LED1_TOGGLE	P1OUT ^= LED1
 
-// sync word for AIS
+// sync word for AIS - only used for test
 #define AIS_SYNC_WORD		0x7e
 
+// paramters for package detection
 #define PH_PREAMBLE_LENGTH	8		// minimum number of alternating bits we need for a valid preamble
 #define PH_SYNC_TIMEOUT	16			// number of bits we wait for a preamble to start before changing channel
+#define PH_RSSI_THRESHOLD -95		// threshold in dBm for valid signal, comment out to ignore signal strength
 
 // pins that packet handler uses to receive data
 #define	PH_DATA_CLK_PIN		BIT2	// 2.2 RX data clock
@@ -79,8 +81,14 @@ void ph_setup(void)
 // start packet handler operation, including ISR
 void ph_start(void)
 {
-	// start radio, wait until it's spun up
+
 #ifndef TEST
+	#ifdef PH_RSSI_THRESHOLD
+	// set radio RSSI threshold
+	radio_set_property(0x20, 0x4a, RADIO_DBM_TO_RSSI(PH_RSSI_THRESHOLD));
+	#endif
+
+	// start radio, wait until it's spun up
 	radio_start_rx(ph_radio_channel, 0, 0, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE, RADIO_STATE_NO_CHANGE);
 	radio_wait_for_CTS();
 #endif
@@ -195,6 +203,14 @@ __interrupt void ph_irq_handler(void)
 
 			case PH_SYNC_FLAG:								// sub-state: start flag detection
 				rx_sync_count--;							// count down bits
+#ifndef TEST
+#ifdef PH_RSSI_THRESHOLD
+				if (!RADIO_SIGNAL) {						// if we don't have a stable signal
+					ph_state = PH_STATE_RESET;					// abort sync and reset state machine
+					break;
+				}
+#endif
+#endif
 				if (rx_sync_count != 0) {					// if this is not the last bit
 					if (!rx_bit)								// we expect a 1, 0 is an error
 						rx_sync_state = PH_SYNC_RESET;			// restart preamble detection
@@ -202,7 +218,7 @@ __interrupt void ph_irq_handler(void)
 					if (!rx_bit) {								// we expect a 0
 #ifndef TEST
 						radio_frr_read('A', 1);						// read fetched RSSI from FRR
-						ph_rssi = ((int) radio_buffer.data[0] >> 1) - 0x40 - 70;	// calculate dBm: RSSI / 2 - RSSI_COMP - 70
+						ph_rssi = RADIO_RSSI_TO_DBM(radio_buffer.data[0]);	// convert RSSI into dBm
 #endif
 						rx_bit_count = 0;							// reset bit counter
 						ph_state = PH_STATE_PREFETCH;				// next state: start receiving packet
@@ -217,6 +233,13 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_PREFETCH:								// state: pre-fill receive buffer with 8 bits
 			rx_bit_count++;									// increase bit counter
+
+			if (!RADIO_SIGNAL) {							// if we don't have a stable signal
+				ph_last_error = PH_ERROR_RSSI_DROP;				// report error
+				ph_state = PH_STATE_RESET;						// abort package
+				break;
+			}
+
 			if (rx_bit_count == 8) {						// after 8 bits arrived
 				rx_bit_count = 0;							// reset bit counter
 				rx_one_count = 0;							// reset counter for stuff bits
@@ -230,6 +253,12 @@ __interrupt void ph_irq_handler(void)
 			break;											// do nothing for the first 8 bits to fill buffer
 
 		case PH_STATE_RECEIVE_PACKET:						// state: receiving packet data
+			if (!RADIO_SIGNAL) {							// if we don't have a stable signal
+				ph_last_error = PH_ERROR_RSSI_DROP;				// report error
+				ph_state = PH_STATE_RESET;						// abort package
+				break;
+			}
+
 			rx_bit = rx_bitstream & 0x80;					// extract data bit for processing
 
 			if (rx_one_count == 5) {						// if we expect a stuff-bit..

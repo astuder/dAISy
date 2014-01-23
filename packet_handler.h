@@ -27,10 +27,10 @@ enum PH_STATE {
 // packet handler errors
 enum PH_ERROR {
 	PH_ERROR_NONE = 0,
-	PH_ERROR_NOSTART,		// no start flag after preamble
 	PH_ERROR_STUFFBIT,		// invalid stuff-bit
 	PH_ERROR_NOEND,			// no end flag after more than 1020 bits, message too long
-	PH_ERROR_CRC			// CRC error
+	PH_ERROR_CRC,			// CRC error
+	PH_ERROR_RSSI_DROP		// signal strength fell below threshold
 };
 
 uint8_t ph_get_state(void);			// get current state of packet handler

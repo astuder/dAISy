@@ -20,10 +20,16 @@
 
 #define CMD_NOP						0x00
 #define CMD_PART_INFO				0x01
+#define CMD_POWER_UP				0x02
 #define CMD_FUNC_INFO				0x10
-#define CMD_POWER_UP				0x12
+#define CMD_SET_PROPERTY			0x11
+#define CMD_GET_PROPERTY			0x12
+#define CMD_GPIO_PIN_CONFIG			0x13
+#define CMD_GET_ADC_READING			0x14
 #define CMD_FIFO_INFO				0x15
+#define CMD_PACKET_INFO				0x16
 #define CMD_IRCAL					0x17
+#define CMD_PROTOCOL_CFG			0x18
 #define CMD_GET_INT_STATUS			0x20
 #define CMD_GET_PH_STATUS			0x21
 #define CMD_GET_MODEM_STATUS		0x22
@@ -31,6 +37,7 @@
 #define CMD_START_RX				0x32
 #define CMD_REQUEST_DEVICE_STATE	0x33
 #define CMD_CHANGE_STATE			0x34
+#define CMD_RX_HOP					0x36
 #define CMD_READ_CMD_BUFF			0x44
 #define CMD_FRR_A_READ				0x50
 #define CMD_READ_RX_FIFO			0x77
@@ -44,8 +51,8 @@ const uint8_t radio_ircal_sequence_fine[] = { 0x13, 0x10, 0xCA, 0xF0 };
 
 union radio_buffer_u radio_buffer;
 
-void send_command(uint8_t cmd, const uint8_t *send_buffer, uint8_t send_length, uint8_t response_length);
-int receive_result(uint8_t length);
+static void send_command(uint8_t cmd, const uint8_t *send_buffer, uint8_t send_length, uint8_t response_length);
+static int receive_result(uint8_t length);
 
 // configure I/O pins used for radio
 void radio_setup(void)
@@ -99,6 +106,17 @@ void radio_configure(void)
 		while (!RADIO_READY);					// wait for chip to complete operation
 	}
 
+	return;
+}
+
+// directly set individual radio property
+void radio_set_property(uint8_t prop_group,	uint8_t prop_num, uint8_t value)
+{
+	radio_buffer.data[0] = prop_group;
+	radio_buffer.data[1] = 1;
+	radio_buffer.data[2] = prop_num;
+	radio_buffer.data[3] = value;
+	send_command(CMD_SET_PROPERTY, radio_buffer.data, 4, 0);
 	return;
 }
 
