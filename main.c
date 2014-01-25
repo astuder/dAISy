@@ -104,8 +104,8 @@ int main(void)
 		// retrieve last packet handler error
 		uint8_t error = ph_get_last_error();
 #ifdef DEBUG_MESSAGES
-		// report error if packet handler failed after finding preamble and start flag
-		if (error == PH_ERROR_NOEND || error == PH_ERROR_STUFFBIT || error == PH_ERROR_CRC)	{
+		// report error if packet handler failed
+		if (error != PH_ERROR_NONE)	{
 			dec_to_str(str_output_buffer, 3, rssi);											// convert to decimal string (reuse radio buffer)
 			str_output_buffer[4] = 0;														// terminate string
 			uart_send_string("sync ");														// send debug message to UART
