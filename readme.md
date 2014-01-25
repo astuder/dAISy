@@ -6,6 +6,7 @@ dAISy (do AIS yourself) is a simple AIS receiver based on Silicon Labs [Si4362 E
 AIS, short for "Automatic Identification System", is a tracking system for ships. More on [Wikipedia](http://en.wikipedia.org/wiki/Automatic_Identification_System). There are many websites dedicated to tracking ships based on this system, like for example [MarineTraffic](http://www.marinetraffic.com/).
 
 dAISy features:
+- integrated radio, no need for external radio with discriminator tap
 - hopping between channel A (161.975 MHz) and B (162.025 MHz)
 - receives, decodes and validates packets according to ITU-R M.1371-4 (NRZI decoding, bit-destuffing, CRC validation) 
 - wraps valid packets into NMEA 0183 sentences (AIVDM)
