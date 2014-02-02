@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 11/9/2013 5:19:22 PM
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 1/16/2014 5:30:36 PM
 
 BeginCmp
 TimeStamp = /51EB0516;
@@ -22,30 +22,30 @@ IdModule  = SM0805;
 EndCmp
 
 BeginCmp
-TimeStamp = /527EDBCE;
+TimeStamp = /52D481B6;
 Reference = C4;
-ValeurCmp = 100 nF;
+ValeurCmp = C;
 IdModule  = SM0805;
 EndCmp
 
 BeginCmp
 TimeStamp = /51EB04F8;
 Reference = CR1;
-ValeurCmp = 11.5-13.8 pF;
+ValeurCmp = 10 pF;
 IdModule  = SM0805;
 EndCmp
 
 BeginCmp
 TimeStamp = /51EB0507;
 Reference = CR2;
-ValeurCmp = 6-7 pF;
+ValeurCmp = 5 pF;
 IdModule  = SM0805;
 EndCmp
 
 BeginCmp
 TimeStamp = /51EB0569;
 Reference = LR1;
-ValeurCmp = 270 nH;
+ValeurCmp = 280 nH;
 IdModule  = SM0805;
 EndCmp
 
@@ -60,7 +60,7 @@ BeginCmp
 TimeStamp = /51EB088F;
 Reference = P1;
 ValeurCmp = Antenna;
-IdModule  = SIL-2;
+IdModule  = uFL-Conn;
 EndCmp
 
 BeginCmp
@@ -109,7 +109,7 @@ BeginCmp
 TimeStamp = /51EB05E9;
 Reference = X1;
 ValeurCmp = 30 MHz;
-IdModule  = crystal_FA238-TSX3225;
+IdModule  = Crystal-50x32;
 EndCmp
 
 EndListe
