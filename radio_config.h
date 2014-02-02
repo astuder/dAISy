@@ -71,7 +71,7 @@
 // Descriptions:
 // GLOBAL_XO_TUNE - Crystal oscillator frequency tuning value. 0x00 is maximum frequency value and 0x7F is lowest frequency value. Each LSB code corresponds to a 70 fF capacitance change. The total adjustment range assuming a 30 MHz XTAL is +/-100 ppm.
 */
-#define RF_GLOBAL_XO_TUNE_1 0x11, 0x00, 0x01, 0x00, 0x5d	//0x52
+#define RF_GLOBAL_XO_TUNE_1 0x11, 0x00, 0x01, 0x00, 0x40	//0x52
 
 /*
 // Set properties: RF_GLOBAL_CONFIG_1

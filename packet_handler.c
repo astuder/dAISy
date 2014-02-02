@@ -233,13 +233,15 @@ __interrupt void ph_irq_handler(void)
 
 		case PH_STATE_PREFETCH:								// state: pre-fill receive buffer with 8 bits
 			rx_bit_count++;									// increase bit counter
-
+#ifndef TEST
+#ifdef PH_RSSI_THRESHOLD
 			if (!RADIO_SIGNAL) {							// if we don't have a stable signal
 				ph_last_error = PH_ERROR_RSSI_DROP;				// report error
 				ph_state = PH_STATE_RESET;						// abort package
 				break;
 			}
-
+#endif
+#endif
 			if (rx_bit_count == 8) {						// after 8 bits arrived
 				rx_bit_count = 0;							// reset bit counter
 				rx_one_count = 0;							// reset counter for stuff bits
@@ -253,12 +255,15 @@ __interrupt void ph_irq_handler(void)
 			break;											// do nothing for the first 8 bits to fill buffer
 
 		case PH_STATE_RECEIVE_PACKET:						// state: receiving packet data
+#ifndef TEST
+#ifdef PH_RSSI_THRESHOLD
 			if (!RADIO_SIGNAL) {							// if we don't have a stable signal
 				ph_last_error = PH_ERROR_RSSI_DROP;				// report error
 				ph_state = PH_STATE_RESET;						// abort package
 				break;
 			}
-
+#endif
+#endif
 			rx_bit = rx_bitstream & 0x80;					// extract data bit for processing
 
 			if (rx_one_count == 5) {						// if we expect a stuff-bit..
