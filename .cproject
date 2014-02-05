@@ -89,7 +89,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="out" artifactName="${ProjName}" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.MSP430.Release.454804848" name="Release" parent="com.ti.ccstudio.buildDefinitions.MSP430.Release">
+				<configuration artifactExtension="out" artifactName="${ProjName}" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.MSP430.Release.454804848" name="Release" parent="com.ti.ccstudio.buildDefinitions.MSP430.Release" postannouncebuildStep="Create flash image: TI-TXT" postbuildStep="&quot;${CG_TOOL_HEX}&quot; --ti_txt &quot;${BuildArtifactFileName}&quot; -o &quot;${BuildArtifactFileBaseName}.txt&quot; -order MS -romwidth 16">
 					<folderInfo id="com.ti.ccstudio.buildDefinitions.MSP430.Release.454804848." name="/" resourcePath="">
 						<toolChain id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exe.ReleaseToolchain.1672380708" name="TI Build Tools" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exe.ReleaseToolchain" targetTool="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exe.linkerRelease.559662327">
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.393493168" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
@@ -231,7 +231,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="dAISy.com.ti.ccstudio.buildDefinitions.MSP430.ProjectType.163689706" name="MSP430" projectType="com.ti.ccstudio.buildDefinitions.MSP430.ProjectType"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration"/>
 	<storageModule moduleId="org.eclipse.cdt.core.language.mapping">
 		<project-mappings>
 			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.asmSource" language="com.ti.ccstudio.core.TIASMLanguage"/>
@@ -243,4 +242,17 @@
 	</storageModule>
 	<storageModule moduleId="null.endianPreference"/>
 	<storageModule moduleId="cpuFamily"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/dAISy"/>
+		</configuration>
+		<configuration configurationName="Test">
+			<resource resourceType="PROJECT" workspacePath="/dAISy"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/dAISy"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="scannerConfiguration"/>
 </cproject>
