@@ -7,9 +7,9 @@
 #include "fifo.h"
 
 #define FIFO_BUFFER_SIZE		128					// size of FIFO in bytes (must be 2^x)
-#define FIFO_PACKETS			8					// max number of individual packets in FIFO (must be 2^x, should be approx. FIFO_SIZE/avg message size)
+#define FIFO_PACKETS			8					// max number of individual packets in FIFO (must be 2^x, should be approx. FIFO_BUFFER_SIZE/avg message size)
 
-#if (FIFO_SIZE > 256)								// determine smallest data type required to hold FIFO pointers
+#if (FIFO_BUFFER_SIZE > 256)						// determine smallest data type required to hold FIFO pointers
 #define FIFO_PTR_TYPE	uint16_t					// 16 bit for FIFO larger than 256 bytes
 #else
 #define FIFO_PTR_TYPE	uint8_t						// 8 bit for FIFO smaller than 256 bytes

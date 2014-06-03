@@ -25,11 +25,11 @@
 // paramters for package detection
 #define PH_PREAMBLE_LENGTH	8		// minimum number of alternating bits we need for a valid preamble
 #define PH_SYNC_TIMEOUT	16			// number of bits we wait for a preamble to start before changing channel
-#define PH_RSSI_THRESHOLD -95		// threshold in dBm for valid signal, comment out to ignore signal strength
+//#define PH_RSSI_THRESHOLD -95		// threshold in dBm for valid signal, comment out to ignore signal strength
 
 // pins that packet handler uses to receive data
-#define	PH_DATA_CLK_PIN		BIT2	// 2.2 RX data clock
-#define PH_DATA_PIN			BIT3	// 2.3 RX data
+#define	PH_DATA_CLK_PIN		RADIO_GPIO_0	// RX data clock
+#define PH_DATA_PIN			RADIO_NIRQ	// RX data
 #define PH_DATA_PORT		2	  	// data pins are on port 2 (only ports 1 and 2 supported)
 
 // data port dependent defines
