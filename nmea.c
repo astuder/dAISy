@@ -38,9 +38,10 @@ void nmea_process_packet(void)
 	if (packet_size == 0)
 		return;									// no packet available in FIFO, nothing to send
 
-	packet_size -= 2;							// ignore last two bytes (AIS CRC)
-
 	uint8_t radio_channel = fifo_read_byte() + 'A';	// retrieve radio channel (0=A, 1=B)
+	packet_size--;								// account for channel byte!
+
+	packet_size -= 2;							// don't encode last two bytes (AIS CRC)
 
 	// calculate number of fragments, NMEA allows 82 characters per sentence
 	//			-> max 62 6-bit characters payload
