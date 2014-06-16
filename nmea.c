@@ -16,8 +16,13 @@
 void nmea_push_char(char c);
 uint8_t nmea_push_packet(uint8_t packet_size);
 
+#define NMEA_MAX_AIS_PAYLOAD 42		// number of AIS bytes per NMEA sentence, to keep total NMEA sentence always below 82 characters
+#define NMEA_AIS_BITS (NMEA_MAX_AIS_PAYLOAD * 8)
+#define NMEA_AIS_BITS_ENCODED ((NMEA_AIS_BITS + 5) / 6)
+
 const char nmea_lead[] = "!AIVDM,";		// static start of NMEA sentence
-char nmea_buffer[82-7+1];				// buffer for dynamic part of NMEA sentence
+char nmea_buffer[8+NMEA_AIS_BITS_ENCODED+5+1];  // buffer for dynamic part of NMEA sentence
+                                                // fragment and channel info, AIS payload, stuff-bit and crc, 0-termination
 uint8_t nmea_buffer_index;				// current buffer position
 
 #define NMEA_LEAD_CRC	'A' ^ 'I' ^ 'V' ^ 'D' ^ 'M' ^ ','		// CRC for static start of sentence
@@ -38,18 +43,17 @@ void nmea_process_packet(void)
 	if (packet_size == 0)
 		return;									// no packet available in FIFO, nothing to send
 
-	packet_size -= 2;							// ignore last two bytes (AIS CRC)
-
 	uint8_t radio_channel = fifo_read_byte() + 'A';	// retrieve radio channel (0=A, 1=B)
 
 	// calculate number of fragments, NMEA allows 82 characters per sentence
 	//			-> max 62 6-bit characters payload
 	//			-> max 46 AIS bytes (368 bits) per sentence
+	packet_size -= 3;							// subtract channel and AIS CRC from packet length
 	uint8_t curr_fragment = 1;
 	uint8_t total_fragments = 1;
 	uint16_t packet_bits = packet_size * 8;
-	while (packet_bits > 368) {
-		packet_bits -= 368;
+	while (packet_bits > NMEA_AIS_BITS) {
+		packet_bits -= NMEA_AIS_BITS;
 		total_fragments++;
 	}
 
@@ -83,11 +87,11 @@ void nmea_process_packet(void)
 		nmea_push_char(radio_channel);
 		nmea_push_char(',');
 
-		// encode and write next 46 bytes from AIS packet
+		// encode and write next NMEA_MAX_AIS_PAYLOAD bytes from AIS packet
 		uint8_t fragment_size = packet_size;
-		if (fragment_size > 46)
+		if (fragment_size > NMEA_MAX_AIS_PAYLOAD)
 		{
-			fragment_size = 46;
+			fragment_size = NMEA_MAX_AIS_PAYLOAD;
 		}
 		uint8_t stuff_bits = nmea_push_packet(fragment_size);
 		packet_size -= fragment_size;

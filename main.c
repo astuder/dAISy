@@ -88,8 +88,6 @@ int main(void)
 
 		__low_power_mode_4();	// deep sleep until something worthwhile happens
 
-		ph_loop();	// packet handler house-keeping, e.g. channel hopping
-
 #ifdef DEBUG_MESSAGES
 		uint8_t channel;
 		int16_t rssi;
@@ -129,7 +127,6 @@ int main(void)
 				break;
 			}
 			uart_send_string("\r\n");
-			ph_loop();							// house keeping, sending over UART takes time
 		}
 #else
 		// toggle LED if packet handler failed after finding preamble and start flag
