@@ -106,11 +106,6 @@ void ph_start(void)
 	// ISR is now running and will operate radio, don't call radio library until ph ISR is stopped.
 }
 
-void ph_loop(void)
-{
-	// nothing to do here right now
-}
-
 // interrupt handler for receiving raw modem data via DATA/DATA_CLK pins
 #pragma vector=PH_DATA_PORT_VECTOR
 __interrupt void ph_irq_handler(void)
@@ -128,6 +123,8 @@ __interrupt void ph_irq_handler(void)
 
 	uint8_t wake_up = 0;						// if set, LPM bits will be cleared
 
+	LED1_ON;
+
 	if ((PH_DATA_IFG & PH_DATA_CLK_PIN)			// verify this interrupt is from DATA_CLK/GPIO_2 pin
 			&& RADIO_READY) {					// and only process data received while radio ready
 
@@ -142,12 +139,8 @@ __interrupt void ph_irq_handler(void)
 
 		// add decoded bit to bit-stream (receiving LSB first)
 		rx_bitstream >>= 1;
-		if (rx_bit) {
-			LED1_ON;
+		if (rx_bit)
 			rx_bitstream |= 0x8000;
-		} else {
-			LED1_OFF;
-		}
 
 		// packet handler state machine
 		switch (ph_state) {
@@ -322,6 +315,8 @@ __interrupt void ph_irq_handler(void)
 			wake_up = 1;									// wake up main thread for packet processing and error reporting
 		}
 	}
+
+	LED1_OFF;
 
 	if (wake_up)
 		__low_power_mode_off_on_exit();

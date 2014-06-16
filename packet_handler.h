@@ -12,7 +12,6 @@
 // functions to manage packet handler operation
 void ph_setup(void);				// setup packet handler, e.g. configuring input pins
 void ph_start(void);				// start receiving packages
-void ph_loop(void);					// maintenance of packet handler, e.g. channel hop, call in main loop
 void ph_stop(void);					// stop receiving packages
 
 // packet handler states
