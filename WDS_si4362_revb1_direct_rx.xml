@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
-<RCA_ProjectData ProjectName="Direct RX" ChipType="Si4362" ChipRevision="B1" Version="3.2.5.0">
+<RCA_ProjectData ProjectName="Direct RX" ChipType="Si4362" ChipRevision="B1" Version="3.2.6.0">
   <DataItems>
     <tbpFrequencyAndPower Type="System.Windows.Forms.TabPage">
       <grbCrystalControl Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbUseExternalTCXO">
           <Checked>False</Checked>
-        </DataItem>
-        <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCrystalToleranceTX">
-          <Value>20</Value>
-        </DataItem>
-        <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCrystalToleranceRX">
-          <Value>20</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCrystalFrequency">
           <Value>30</Value>
@@ -77,11 +71,11 @@
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableIqCalibration">
           <Checked>False</Checked>
         </DataItem>
-        <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableBerMode">
-          <Checked>False</Checked>
-        </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbIfMode">
           <SelectedIndex>0</SelectedIndex>
+        </DataItem>
+        <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableBerMode">
+          <Checked>False</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbPreamblePattern">
           <SelectedIndex>0</SelectedIndex>
