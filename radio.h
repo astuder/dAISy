@@ -9,6 +9,7 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#define RADIO_PORT 			2
 #define RADIO_GPIO_0		BIT0	// 2.0 configurable, e.g. sync word, high when detected
 #define RADIO_GPIO_1		BIT1	// 2.1 configurable, default is CTS - this library relies on this!
 #define RADIO_GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
