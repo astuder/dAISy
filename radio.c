@@ -11,7 +11,6 @@
 
 #include "radio.h"
 #include "radio_config.h"
-//#include "radio_config_Si4362 with CRC.h"
 #include "spi.h"
 
 #define	SPI_NSEL	BIT4						// chip select on pin 1.4
