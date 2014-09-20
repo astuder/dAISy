@@ -10,11 +10,11 @@
 #define RADIO_H_
 
 #define RADIO_PORT 			2
-#define RADIO_GPIO_0		BIT0	// 2.0 configurable, e.g. sync word, high when detected
-#define RADIO_GPIO_1		BIT1	// 2.1 configurable, default is CTS - this library relies on this!
-#define RADIO_GPIO_2		BIT2	// 2.2 configurable, e.g. RX data clock
-#define RADIO_GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
-#define RADIO_SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
+#define RADIO_GPIO_0		BIT3	// 2.3 configurable, e.g. sync word, high when detected
+#define RADIO_GPIO_1		BIT4	// 2.4 configurable, default is CTS - this library relies on this!
+#define RADIO_GPIO_2		BIT0	// 2.0 configurable, e.g. RX data clock
+#define RADIO_GPIO_3		BIT1	// 2.1 configurable, e.g. RX data
+#define RADIO_SDN			BIT2	// 2.2 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
 #define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. CCA, high when RSSI exceeding threshold
 
 #define RADIO_CTS			RADIO_GPIO_1	// when low, chip is busy/not ready
