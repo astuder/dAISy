@@ -69,7 +69,7 @@
           <Checked>False</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableIqCalibration">
-          <Checked>False</Checked>
+          <Checked>True</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbIfMode">
           <SelectedIndex>0</SelectedIndex>

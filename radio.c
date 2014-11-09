@@ -64,12 +64,12 @@ void radio_setup(void)
 	spi_init();
 
 	// initialize CTS pin as input
-	P2SEL &= ~(RADIO_CTS);
-	P2DIR &= ~(RADIO_CTS);
+	RADIO_PSEL &= ~(RADIO_CTS);						// CTS pin is I/O
+	RADIO_PDIR &= ~(RADIO_CTS);						// CTS pin is input
 
-	// initialize shutdown pin
-	P2SEL &= ~RADIO_SDN;							// shutdown pin is I/O
-	P2DIR |= RADIO_SDN;								// shutdown pin is output
+	// initialize shutdown pin as output
+	RADIO_PSEL &= ~RADIO_SDN;						// shutdown pin is I/O
+	RADIO_PDIR |= RADIO_SDN;						// shutdown pin is output
 
 	return;
 }
@@ -78,20 +78,20 @@ void radio_setup(void)
 void radio_shutdown(void)
 {
 	// initialize shutdown pin
-	P2SEL &= ~RADIO_SDN;							// shutdown pin is I/O
-	P2DIR |= RADIO_SDN;								// shutdown pin is output
+	RADIO_PSEL &= ~RADIO_SDN;							// shutdown pin is I/O
+	RADIO_PDIR |= RADIO_SDN;								// shutdown pin is output
 
 	// SDN high = turn off radio
-	P2OUT |= RADIO_SDN;
+	RADIO_POUT |= RADIO_SDN;
 }
 
 // reset radio and load configuration data
 void radio_configure(void)
 {
 	// reset radio: SDN=1, wait >1us, SDN=0
-	P2OUT |= RADIO_SDN;
+	RADIO_POUT |= RADIO_SDN;
 	_delay_cycles(1000);
-	P2OUT &= ~RADIO_SDN;
+	RADIO_POUT &= ~RADIO_SDN;
 
 	while (!RADIO_READY);						// wait for chip to wake up
 
@@ -122,8 +122,10 @@ void radio_set_property(uint8_t prop_group,	uint8_t prop_num, uint8_t value)
 // invoke radio image rejection self-calibration
 void radio_calibrate_ir(void)
 {
-	// send calibration sequence as per datasheet
+	// send calibration sequence as per datasheet - doing it wrong, read AN790
 	// note: looking at si446x_ircal.c in provided examples, CMD_IRCAL has 3 undocumented return values CAL_STATE, RSSI, DIR_CH
+	// note2: don't use this method, rely on WDS to generate proper calibration sequence
+	radio_start_rx(0,0,0,0,0,0);
 	send_command(CMD_IRCAL, radio_ircal_sequence_coarse, sizeof(radio_ircal_sequence_coarse), 0);
 	send_command(CMD_IRCAL, radio_ircal_sequence_fine, sizeof(radio_ircal_sequence_fine), 0);
 	while (!RADIO_READY);						// wait for calibration to complete

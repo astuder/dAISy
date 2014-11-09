@@ -16,17 +16,28 @@
 #define RADIO_GPIO_3		BIT3	// 2.3 configurable, e.g. RX data
 #define RADIO_SDN			BIT4	// 2.4 chip shutdown, set high for 1us to reset radio, pulled low by 100k resistor
 #define RADIO_NIRQ			BIT5	// 2.5 configurable, e.g. CCA, high when RSSI exceeding threshold
+#if (RADIO_PORT == 1)
+#define RADIO_PIN			P1IN
+#define RADIO_POUT			P1OUT
+#define RADIO_PSEL			P1SEL
+#define RADIO_PDIR			P1DIR
+#elif (RADIO_PORT == 2)
+#define RADIO_PIN			P2IN
+#define RADIO_POUT			P2OUT
+#define RADIO_PSEL			P2SEL
+#define RADIO_PDIR			P2DIR
+#endif
 
 #define RADIO_CTS			RADIO_GPIO_1	// when low, chip is busy/not ready
 #ifndef TEST
-#define RADIO_READY	(P2IN & RADIO_CTS)
+#define RADIO_READY	(RADIO_PIN & RADIO_CTS)
 #else
 #define RADIO_READY (1)
 #endif
 
 #define RADIO_CCA			RADIO_NIRQ		// when high, signal strength exceeds RSSI threshold
 #ifndef TEST
-#define RADIO_SIGNAL (P2IN & RADIO_CCA)
+#define RADIO_SIGNAL (RADIO_PIN & RADIO_CCA)
 #else
 #define RADIO_SIGNAL (1)
 #endif

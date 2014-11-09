@@ -65,9 +65,6 @@ int main(void)
 	radio_setup();
 	radio_configure();
 
-	// self-calibrate image rejection
-	radio_calibrate_ir();
-
 	// verify that radio configuration was successful
 	radio_get_chip_status(0);
 	if (radio_buffer.chip_status.chip_status & RADIO_CMD_ERROR) {	// check for command error
