@@ -144,9 +144,12 @@ __interrupt void ph_irq_handler(void)
 
 		// packet handler state machine
 		switch (ph_state) {
+
+	// STATE: OFF
 		case PH_STATE_OFF:									// state: off, do nothing
 			break;
 
+	// STATE: RESET
 		case PH_STATE_RESET:								// state: reset, prepare state machine for next packet
 			rx_bitstream &= 8000;							// reset bit-stream (but don't throw away incoming bit)
 			rx_bit_count = 0;								// reset bit counter
@@ -156,10 +159,14 @@ __interrupt void ph_irq_handler(void)
 			rx_sync_state = PH_SYNC_RESET;
 			break;
 
+	// STATE: WAIT FOR PREAMBLE AND START FLAG
 		case PH_STATE_WAIT_FOR_SYNC:						// state: waiting for preamble and start flag
 			rx_bit_count++;									// count processed bits since reset
 
+	  // START OF SYNC STATE MACHINE
 			switch (rx_sync_state) {
+
+		// SYNC STATE: RESET
 			case PH_SYNC_RESET:								// sub-state: (re)start sync process
 				if (rx_bit_count > PH_SYNC_TIMEOUT)			// if we exceeded sync time out
 					ph_state = PH_STATE_RESET;				// reset state machine, will trigger channel hop
@@ -172,14 +179,22 @@ __interrupt void ph_irq_handler(void)
 				}
 				break;
 
+		  // SYNC STATE: 0-BIT
 			case PH_SYNC_0:									// sub-state: last bit was a 0
 				if (rx_bit) {								// if we get a 1
 					rx_sync_count++;							// valid preamble bit
 					rx_sync_state = PH_SYNC_1;					// next state
-				} else										// if we get another 0
-					rx_sync_state = PH_SYNC_RESET;				// invalid preamble bit, restart preamble detection
+				} else {									// if we get another 0
+					if (rx_sync_count > PH_PREAMBLE_LENGTH)	{	// if we have a sufficient preamble length
+						rx_sync_count = 7;							// treat this as part of start flag, we already have 1 out of 8 bits (0.......)
+						rx_sync_state = PH_SYNC_FLAG;				// next state flag detection
+					}
+					else										// if not
+						rx_sync_state = PH_SYNC_RESET;				// invalid preamble bit, restart preamble detection
+				}
 				break;
 
+		  // SYNC STATE: 1-BIT
 			case PH_SYNC_1:									// sub-state: last bit was a 1
 				if (!rx_bit) {								// if we get a 0
 					rx_sync_count++;							// valid preamble bit
@@ -194,6 +209,7 @@ __interrupt void ph_irq_handler(void)
 				}
 				break;
 
+		  // SYNC STATE: START FLAG
 			case PH_SYNC_FLAG:								// sub-state: start flag detection
 				rx_sync_count--;							// count down bits
 #ifndef TEST
@@ -204,10 +220,10 @@ __interrupt void ph_irq_handler(void)
 				}
 #endif
 #endif
-				if (rx_sync_count != 0) {					// if this is not the last bit
+				if (rx_sync_count != 0) {					// if this is not the last bit of start flag
 					if (!rx_bit)								// we expect a 1, 0 is an error
 						rx_sync_state = PH_SYNC_RESET;			// restart preamble detection
-				} else {									// if this is the last bit
+				} else {									// if this is the last bit of start flag
 					if (!rx_bit) {								// we expect a 0
 #ifndef TEST
 						radio_frr_read('A', 1);						// read fetched RSSI from FRR
@@ -221,9 +237,10 @@ __interrupt void ph_irq_handler(void)
 				}
 				break;
 			}
-
+		// END OF SYNC STATE MACHINE - preamble and start flag detected
 			break;
 
+	// STATE: PREFETCH FIRST PACKET BYTE
 		case PH_STATE_PREFETCH:								// state: pre-fill receive buffer with 8 bits
 			rx_bit_count++;									// increase bit counter
 #ifndef TEST
@@ -247,6 +264,7 @@ __interrupt void ph_irq_handler(void)
 
 			break;											// do nothing for the first 8 bits to fill buffer
 
+	// STATE: RECEIVE PACKET
 		case PH_STATE_RECEIVE_PACKET:						// state: receiving packet data
 #ifndef TEST
 #ifdef PH_RSSI_THRESHOLD
@@ -306,6 +324,7 @@ __interrupt void ph_irq_handler(void)
 
 			break;
 		}
+// END OF PACKET HANDLER STATE MACHINE
 
 		if (ph_state == PH_STATE_RESET) {					// if next state is reset
 			ph_radio_channel ^= 1;							// toggle radio channel between 0 and 1
