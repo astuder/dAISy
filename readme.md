@@ -17,3 +17,6 @@ The output of dAISy can be processed and visualized by mapping and navigation pr
 All content of this project is published under CC BY-NC-SA - [Creative Commons Attribution-NonCommercial-ShareAlike](http://creativecommons.org/licenses/by-nc-sa/4.0/).  
 
 A more detailed description of the project can be found in the [43oh.com forum](http://forum.43oh.com/topic/4833-potm-daisy-a-simple-ais-receiver/).
+
+For those that just want the finished product: I now sell an integrated version of dAISy on [Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
+![dAISy AIS Receiver](http://www.adrianstuder.com/daisy/dAISy%20small.jpg)
