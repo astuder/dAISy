@@ -42,20 +42,20 @@ If you are currently running a firmware version older than 4.0, you will also ne
 1.	Connect to dAISy with a terminal program.
 
 2.	Enter bootloader mode.
-	- Enter the debug menu by pressing ESC.
-	- Start the boot loader by pressing B.
+	- Enter the debug menu by pressing *ESC*.
+	- Start the boot loader by pressing *B*.
 	
 3.	Close the terminal program.
 
-4.	Start BSL_USB_GUI.exe
+4.	Start *BSL_USB_GUI.exe*.
 
-5.	Press Next, accept agreement, press Next.
+5.	Press *Next*, accept agreement, press *Next*.
 
-6.	Choose option “Select Firmware” and browse to the firmware file provided.
+6.	Choose option *Select Firmware* and browse to the firmware file provided.
 	
-	*IMPORTANT:* DO NOT program dAISy with the LED and Echo examples, it will brick the device!
+	**IMPORTANT**: *DO NOT* program dAISy with the LED and Echo examples, it will brick the device!
 
-7.	The “Upgrade Firmware” button should be active and “Found 1 device” is displayed below the button.
+7.	The *Upgrade Firmware* button should be active and “Found 1 device” is displayed below the button.
 	- If not, make sure dAISy is connected and you entered bootloader mode as described above.
 	- If that does not work, connect dAISy directly to your computer without a USB hub and try again.
 	
@@ -69,4 +69,4 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	
 10.	The version information in the debug menu will show.
 
-	"dAISy USB v4.01x" followed by hardware information, e.g. "dAISy USB 3 (5503)"
+	*dAISy USB v4.01x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
