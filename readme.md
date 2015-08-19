@@ -19,4 +19,4 @@ All content of this project is published under CC BY-NC-SA - [Creative Commons A
 A more detailed description of the project can be found in the [43oh.com forum](http://forum.43oh.com/topic/4833-potm-daisy-a-simple-ais-receiver/).
 
 For those that just want the finished product: I now sell an integrated version of dAISy on [Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
-![dAISy AIS Receiver](http://www.adrianstuder.com/daisy/dAISy%20small.jpg)
+![dAISy AIS Receiver](Pictures/dAISyTindie.jpg)
