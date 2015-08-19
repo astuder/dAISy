@@ -30,6 +30,8 @@ Only a few brave souls have these :)
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
+For the tinkerers among us.
+
 Updating the Firmware
 ---------------------
 
@@ -67,6 +69,8 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 	In some cases you might need to disconnect and reconnect dAISy
 	
-10.	The version information in the debug menu will show.
+10.	The version information in the debug menu should now read:
 
 	*dAISy USB v4.01x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
+
+Please let me know if you run into any issues.
