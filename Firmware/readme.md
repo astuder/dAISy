@@ -10,34 +10,34 @@ There currently are 4 versions of the dAISy USB hardware. Make sure you download
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
+This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/). Note that the MSP430 MCU is in a QFN package.
 
-This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
+![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
-![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
+This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads).
 
-Note the MCU is a QFP package (with leads).
+![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
 **hw1: dAISy USB - the stick, MSP430F5508 MCU**
 
-![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
+The first version, mostly sold during 2014. Only a few brave souls have these :)
 
-Only a few brave souls have these :)
+![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
-![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
+For the tinkerers among us. 
 
-For the tinkerers among us.
+![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
 Updating the Firmware
 ---------------------
 
 To update the firmware, you need the programming software from TI. It's part of a bigger package, but for your convenience I made the relevant executable available [here](http://www.adrianstuder.com/daisy/BSL_USB_GUI.zip) (sorry, Windows only)
 
-If you are currently running a firmware version older than 4.0, you will also need to update dAISy's USB driver with [this one](http://www.adrianstuder.com/daisy/daisyUSB%20inf%20v2.zip). Use this driver, when Windows prompts you for a new driver after the upgrade.
+If you are currently running a firmware version older than 4.0, you will also need to update dAISy's USB driver. Use [this driver](http://www.adrianstuder.com/daisy/daisyUSB%20inf%20v2.zip), when Windows prompts you for a new driver after the upgrade.
 
 **Upgrade procedure**
 
