@@ -10,13 +10,13 @@ There currently are 4 versions of the dAISy USB hardware. Make sure you download
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/). Note that the MSP430 MCU is in a QFN package.
+This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/). Note that the MSP430 MCU is in a QFN package. PCB color can be different.
 
 ![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
-This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads).
+This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads). PCB color can be different.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
