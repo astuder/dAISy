@@ -3,6 +3,12 @@ dAISy USB Firmware Updates
 
 This folder contains firmware updates for dAISy receivers, also known as dAISy USB.
 
+Firmware Revisions
+------------------
+
+* *4.02* Significantly improved reception of AIS messages. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
+* *4.03* Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02.
+
 Hardware Variants
 -----------------
 
@@ -10,26 +16,30 @@ There currently are 4 versions of the dAISy USB hardware. Make sure you download
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/). Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_02.txt)* to download firmware.
+This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
+Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_03.txt)* to download firmware.
 
 ![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
-This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2". PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_02.txt)* to download firmware.
+This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
+PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_03.txt)* to download firmware.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
 **hw1: dAISy USB - the stick, MSP430F5508 MCU**
 
 The first version, mostly sold during 2014. Text on the back says "dAISy USB". Only a few brave souls have these :)
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_02.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_03.txt)* to download firmware.
 
 ![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
-For the tinkerers among us. Text on the back says "dAISyPack". Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_02.txt)* to download firmware.
+For the tinkerers among us. Text on the back says "dAISyPack".
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_03.txt)* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
@@ -63,13 +73,16 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	- If that does not work, connect dAISy directly to your computer without a USB hub and try again.
 	
 8.	Press Upgrade Firmware.
-
-	The upgrade should only take a few seconds.
 	
+	The upgrade should only take a few seconds.
+	If the firmware upgrade fails with an error, make sure you use the correct firmware file.
+	After a failed FW update, dAISy will usually start in bootloader mode. Retry this procedure starting
+	at step 4.
+
 9.	After successful upgrade, dAISy should be available again.
 
-	In some cases you might need to disconnect and reconnect dAISy
-	
+	In some cases you might need to disconnect and reconnect dAISy.
+
 10.	The version information in the debug menu should now read:
 
 	*dAISy USB v4.01x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
