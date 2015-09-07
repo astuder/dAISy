@@ -6,8 +6,8 @@ This folder contains firmware updates for dAISy receivers, also known as dAISy U
 Firmware Revisions
 ------------------
 
-* *4.02* Significantly improved reception of AIS messages. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
-* *4.03* Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02.
+* **4.02** Significantly improved reception of AIS messages over previous revisions. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
+* **4.03** Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02.
 
 Hardware Variants
 -----------------
