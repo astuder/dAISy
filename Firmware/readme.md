@@ -7,7 +7,7 @@ Firmware Revisions
 ------------------
 
 * **4.02** Significantly improved reception of AIS messages over previous revisions. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
-* **4.03** Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02.
+* **4.03** Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02, if any at all.
 
 Hardware Variants
 -----------------
@@ -85,6 +85,6 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 10.	The version information in the debug menu should now read:
 
-	*dAISy USB v4.01x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
+	*dAISy USB v4.0x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
 
 Please let me know if you run into any issues.
