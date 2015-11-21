@@ -25,7 +25,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
-This was the first version sold on Tindie. Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
+This was the first version sold on Tindie (May, early June 2015). Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
 PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_04.txt)* to download firmware.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
