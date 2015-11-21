@@ -53,7 +53,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 **Upgrade procedure**
 
-1.	Connect to dAISy with a serial terminal program, like for example Putty or Tera Term.
+1.	Connect to dAISy with a serial terminal program, like for example Putty, RealTerm or HyperTerminal.
     - The serial connection parameters are: baud rate 38400, data bits 8, parity none, stop bits 1 (8n1), flow control none
 	- Select or enter serial port. The serial port of dAISy can be found in the Windows Device Manger under Ports.
 	- If you are not familiar with terminal programs, see [this document](http://www.microsemi.com/document-portal/doc_view/130815-configuring-serial-terminal-emulation-programs) for detailed configuration steps.
