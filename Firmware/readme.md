@@ -53,12 +53,17 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 **Upgrade procedure**
 
-1.	Connect to dAISy with a terminal program.
+1.	Connect to dAISy with a serial terminal program, like for example Putty or RealTerm.
+    - The serial connection parameters are: baud rate 38400, data bits 8, parity none, stop bits 1 (8n1), flow control none
+	- Select or enter serial port.
+	- The serial port of dAISy can be found in the Windows Device Manger under Ports.
 
-2.	Enter bootloader mode.
-	- Enter the debug menu by pressing *ESC*.
-	- Start the boot loader by pressing *B*.
+2.	Put dAISy into boot loader mode by sending the follwing commands.
+	- Press *ESC* to enter the debug menu.
+	- Press *B* to start the boot loader.
 	
+	dAISy will now disable the serial port and is ready for the firmware update.
+
 3.	Close the terminal program.
 
 4.	Start *BSL_USB_GUI.exe*.
@@ -88,4 +93,5 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 	*dAISy USB v4.0x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
 
-Please let me know if you run into any issues.
+Please let me know if you run into any problems. Also don't hesitate to contact me if this all sounds too complicated,
+and you don't have a resident geek to ask for help. 
