@@ -58,7 +58,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	- Select or enter serial port. The serial port of dAISy can be found in the Windows Device Manger under Ports.
 	- If you are not familiar with terminal programs, see [this document](http://www.microsemi.com/document-portal/doc_view/130815-configuring-serial-terminal-emulation-programs) for detailed configuration steps.
 
-2.	Put dAISy into boot loader mode by sending the follwing commands.
+2.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
 	- Press *ESC* to enter the debug menu.
 	- Press *B* to start the boot loader.
 	
