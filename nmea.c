@@ -40,21 +40,27 @@ void nmea_process_packet(void)
 {
 	uint16_t packet_size = fifo_get_packet();
 
-	if (packet_size == 0)
-		return;									// no packet available in FIFO, nothing to send
+	if (packet_size == 0 || packet_size < 4)	// check for empty packet
+		return;									// no (valid) packet available in FIFO, nothing to send
 
 	uint8_t radio_channel = fifo_read_byte() + 'A';	// retrieve radio channel (0=A, 1=B)
 
 	// calculate number of fragments, NMEA allows 82 characters per sentence
 	//			-> max 62 6-bit characters payload
 	//			-> max 46 AIS bytes (368 bits) per sentence
-	packet_size -= 3;							// subtract channel and AIS CRC from packet length
+	packet_size -= 3;							// Ignore channel information and AIS CRC
 	uint8_t curr_fragment = 1;
 	uint8_t total_fragments = 1;
 	uint16_t packet_bits = packet_size * 8;
 	while (packet_bits > NMEA_AIS_BITS) {
 		packet_bits -= NMEA_AIS_BITS;
 		total_fragments++;
+	}
+
+	// avoid sending garbage if fragment count does not make sense
+	if (total_fragments > 9)
+	{
+		return;
 	}
 
 	// maintain message id if this is a multi-sentence message
