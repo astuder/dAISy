@@ -60,6 +60,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 2.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
 	- Press *ESC* to enter the debug menu.
+	- The menu will display the current firmware version on the first line. You can stop here if your dAISy already runs the latest firmware.
 	- Press *B* to start the boot loader.
 	
 	dAISy will now disable the serial port and is ready for the firmware update.
@@ -82,7 +83,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	
 	The upgrade should only take a few seconds.
 	If the firmware upgrade fails with an error, make sure you use the correct firmware file.
-	After a failed FW update, dAISy will usually start in bootloader mode. Retry this procedure starting
+	After a failed FW update, dAISy will usually start in bootloader mode after a power-cycle. Retry this procedure starting
 	at step 4.
 
 9.	After successful upgrade, dAISy should be available again.
