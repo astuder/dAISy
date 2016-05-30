@@ -32,28 +32,28 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 
 This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
 Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary.
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_04.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_08.txt)* to download firmware.
 
 ![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
 This was the first version sold on Tindie (May, early June 2015). Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
-PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_04.txt)* to download firmware.
+PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_08.txt)* to download firmware.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
 **hw1: dAISy USB - the stick, MSP430F5508 MCU**
 
 The first version, mostly sold during 2014. Text on the back says "dAISy USB". Only a few brave souls have these :)
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_04.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_08.txt)* to download firmware.
 
 ![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
 For the tinkerers among us. Text on the back says "dAISyPack".
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_04.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_08.txt)* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
