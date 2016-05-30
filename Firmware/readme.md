@@ -8,7 +8,14 @@ Firmware Revisions
 
 * **4.02** Significantly improved reception of AIS messages over previous revisions. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
 * **4.03** Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02, if any at all.
-* **4.04** Fixed reading channel configuration from FLASH memory. Added debug option with TAB separated output for easier post processing of debug data.
+* **4.04** Fixed reading channel configuration from FLASH memory.
+  - Added debug option with TAB separated output for easier post processing of debug data.
+* **4.07** Fixed crash when receiving certain invalid AIS messages (endless loop spewing invalid AIS messages). 
+  - Fixed crash when USB host goes into sleep (red LED blinking).
+  - Added test mode that outputs a predefined AIS message every 5 second.
+  - Added native support for Si4467 radio IC.
+* **4.08** Added output of current configuration to debug menu.
+  - Updated radio configuration for minor performance improvements.
 
 Hardware Variants
 -----------------
@@ -83,7 +90,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	
 	The upgrade should only take a few seconds.
 	If the firmware upgrade fails with an error, make sure you use the correct firmware file.
-	After a failed FW update, dAISy will usually start in bootloader mode after a power-cycle. Retry this procedure starting
+	After a failed firmware update, dAISy will usually start in bootloader mode after a power-cycle. Retry this procedure starting
 	at step 4.
 
 9.	After successful upgrade, dAISy should be available again.
