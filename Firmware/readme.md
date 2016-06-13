@@ -18,7 +18,7 @@ Firmware Revisions
   - Fixed crash when USB host goes into sleep (red LED blinking).
   - Added test mode that outputs a predefined AIS message every 5 second.
 * **4.08** May 30 2016
-  - Added native support for Si4467 radio IC.
+  - Added native support for Si4467 radio IC (inside dAISy since mid-May 2016).
   - Added output of current configuration to debug menu.
   - Updated radio configuration for minor performance improvements.
 
@@ -107,5 +107,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 	*dAISy USB v4.0x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
 
+If you bricked dAISy in the process of upgrading it, you can try to revive it following the instructions on [this page](./unbrick-daisy.md).
+	
 Please let me know if you run into any problems. Also don't hesitate to contact me if this all sounds too complicated,
 and you don't have a resident geek to ask for help. 
