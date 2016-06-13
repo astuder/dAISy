@@ -1,29 +1,26 @@
-dAISy USB Firmware Updates
-==========================
+# dAISy USB Firmware Updates
 
 This folder contains firmware updates for dAISy receivers, also known as dAISy USB.
 
-Firmware Revisions
-------------------
+## Firmware History
 
-* **4.02** August 18 2015
-  - Significantly improved reception of AIS messages over previous revisions. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
-* **4.03** September 6 2015
-  - Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02, if any at all.
-* **4.04** October 14 2015
-  - Fixed reading channel configuration from FLASH memory.
-  - Added debug option with TAB separated output for easier post processing of debug data.
-* **4.07** March 13 2016
-  - Fixed crash when receiving certain invalid AIS messages (endless loop spewing invalid AIS messages). 
-  - Fixed crash when USB host goes into sleep (red LED blinking).
-  - Added test mode that outputs a predefined AIS message every 5 second.
 * **4.08** May 30 2016
   - Added native support for Si4467 radio IC (inside dAISy since mid-May 2016).
   - Added output of current configuration to debug menu.
   - Updated radio configuration for minor performance improvements.
+* **4.07** March 13 2016
+  - Fixed crash when receiving certain invalid AIS messages (endless loop spewing invalid AIS messages). 
+  - Fixed crash when USB host goes into sleep (red LED blinking).
+  - Added test mode that outputs a predefined AIS message every 5 second.
+* **4.04** October 14 2015
+  - Fixed reading channel configuration from FLASH memory.
+  - Added debug option with TAB separated output for easier post processing of debug data.
+* **4.03** September 6 2015
+  - Finetuned crystal frequency to be closer to 30 MHz on average. Only minor improvement over 4.02, if any at all.
+* **4.02** August 18 2015
+  - Significantly improved reception of AIS messages over previous revisions. Greatly reduces number of errors, particularly for weak signals (below -80 dBm).
 
-Hardware Variants
------------------
+## Hardware Variants
 
 There currently are 4 versions of the dAISy USB hardware. Make sure you download the right firmware for your version of dAISy!
 Devices sold after August 2015 or running firmware 4.02 and newer will display their hardware and firmware version in the debug menu.
@@ -57,8 +54,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
-Updating the Firmware
----------------------
+## Updating the Firmware (update)
 
 To update the firmware, you need the programming software from TI. It's part of a bigger package, but for your convenience I made the relevant executable available [here](http://www.adrianstuder.com/daisy/BSL_USB_GUI.zip) (sorry, Windows only)
 

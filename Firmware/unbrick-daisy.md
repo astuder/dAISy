@@ -1,10 +1,8 @@
-Un-bricking dAISy
-=================
+# Un-bricking dAISy
 
 When the firmware update is interrupted, or the wrong firmware file was uploaded, dAISy me be unresponsive. This page describes the procedure to revive dAISy. 
 
-Is it truly bricked?
---------------------
+## Is it truly bricked?
 
 Before doing it the hard way, verify the following steps:
 
@@ -13,13 +11,12 @@ Before doing it the hard way, verify the following steps:
 2. Start *BSL_USB_GUI.exe* and click Next and accept the agreement. Does it say "Found 1 device" under the Upgrade Firmware button?
 
 If the above is true, you are lucky and dAISy is still alive. It recovered from a failed firmware update and entered the bootloader. 
-You can try again to upgrade the firmware by starting at step 6 of the [update instructions](./readme.md). Make sure you select the correct version, contact me if in doubt.
+You can try again to upgrade the firmware by starting at step 6 of the [update instructions](./readme.md#update). Make sure you select the correct version, contact me if in doubt.
 If upgrade fails repeatedly, try without USB hub or from a different PC.
 
 If dAISy is not detected by the BSL USB GUI tool, then it is truly bricked.
 
-Un-bricking procedure
----------------------
+## Un-bricking procedure
 
 Follow the steps below to manually force dAISy into boot loader mode.
 
@@ -38,6 +35,6 @@ Follow the steps below to manually force dAISy into boot loader mode.
 
 7. Remove the wire.
 
-8. dAISy should now be in boot loader mode and you can retry the firmware upgrade starting at step 5 of the upgrade instructions.
+8. dAISy should now be in boot loader mode and you can retry the firmware upgrade starting at step 5 of the [upgrade instructions](./readme.md#update).
 
 If all this fails, or simply sounds too complicated, please contact me and I will exchange your bricked dAISy for a working one.
