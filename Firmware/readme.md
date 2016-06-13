@@ -54,7 +54,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
-## Updating the Firmware (update)
+## Updating the Firmware [update]
 
 To update the firmware, you need the programming software from TI. It's part of a bigger package, but for your convenience I made the relevant executable available [here](http://www.adrianstuder.com/daisy/BSL_USB_GUI.zip) (sorry, Windows only)
 
