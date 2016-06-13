@@ -13,7 +13,7 @@ Before doing it the hard way, verify the following steps:
 2. Start *BSL_USB_GUI.exe* and click Next and accept the agreement. Does it say "Found 1 device" under the Upgrade Firmware button?
 
 If the above is true, you are lucky and dAISy is still alive. It recovered from a failed firmware update and entered the bootloader. 
-You can try again to upgrade the firmware by starting at step 6 of the update instructions. Make sure you select the correct version, contact me if in doubt.
+You can try again to upgrade the firmware by starting at step 6 of the [update instructions](./readme.md). Make sure you select the correct version, contact me if in doubt.
 If upgrade fails repeatedly, try without USB hub or from a different PC.
 
 If dAISy is not detected by the BSL USB GUI tool, then it is truly bricked.
