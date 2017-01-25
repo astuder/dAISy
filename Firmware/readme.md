@@ -4,6 +4,11 @@ This folder contains firmware updates for dAISy receivers, also known as dAISy U
 
 ## Firmware History
 
+* **4.11** January 24 2017
+  - Fixed bug to make dAISy work again with Android. This bug was introduced in version 4.10.
+  - Slowed down channel hopping to twice per second. This improves the number of received messages by up to 25%.
+  - Added command & to retrieve device serial number while in receive mode
+  - Added support for input from AUX serial when enabled. However there still is no output of the debug menu on AUX serial.
 * **4.08** May 30 2016
   - Added native support for Si4467 radio IC (inside dAISy since mid-May 2016).
   - Added output of current configuration to debug menu.
@@ -29,28 +34,28 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 
 This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
 Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary.
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_08.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_11.txt)* and select *save target as* to download firmware.
 
 ![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
 This was the first version sold on Tindie (May, early June 2015). Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
-PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_08.txt)* to download firmware.
+PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_11.txt)* and select *save target as* to download firmware.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
 **hw1: dAISy USB - the stick, MSP430F5508 MCU**
 
 The first version, mostly sold during 2014. Text on the back says "dAISy USB". Only a few brave souls have these :)
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_08.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_11.txt)* and select *save target as* to download firmware.
 
 ![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
 For the tinkerers among us. Text on the back says "dAISyPack".
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_08.txt)* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_11.txt)* and select *save target as* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
@@ -62,46 +67,52 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 **Upgrade procedure**
 
-1.	Connect to dAISy with a serial terminal program, like for example Putty.
+1.  Verify that the firmware file is a plain text file. The filename should end with .txt. The file content should look similar to this:
+	> @8000
+    > 5F 14 21 83 82 93 86 27 09 24 92 83 86 27 82 93 
+    > 84 27 0A 20 F2 F0 7F 00 23 02 0B 3C B2 40 80 BB 
+	If the file is not plain text (e.g. has HTML formatting), download it again. Make sure to download the RAW file, not the Github web page.
+
+2.	Connect to dAISy with a serial terminal program, like for example Putty.
     - The serial connection parameters are: baud rate 38400, data bits 8, parity none, stop bits 1 (8n1), flow control none
 	- Select or enter serial port. The serial port of dAISy can be found in the Windows Device Manger under Ports.
 	- If you are not familiar with terminal programs, see [this document](http://www.microsemi.com/document-portal/doc_view/130815-configuring-serial-terminal-emulation-programs) for detailed configuration steps.
 
-2.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
+3.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
 	- Press *ESC* to enter the debug menu.
 	- The menu will display the current firmware version on the first line. You can stop here if your dAISy already runs the latest firmware.
 	- Press *B* to start the boot loader.
 	
 	dAISy will now disable the serial port and is ready for the firmware update.
 
-3.	Close the terminal program.
+4.	Close the terminal program.
 
-4.	Start *BSL_USB_GUI.exe*.
+5.	Start *BSL_USB_GUI.exe*.
 
-5.	Press *Next*, accept agreement, press *Next*.
+6.	Press *Next*, accept agreement, press *Next*.
 
-6.	Choose option *Select Firmware* and browse to the firmware file provided.
+7.	Choose option *Select Firmware* and browse to the firmware file provided.
 	
 	**IMPORTANT**: *DO NOT* program dAISy with the LED and Echo examples, it will brick the device!
 
-7.	The *Upgrade Firmware* button should be active and “Found 1 device” is displayed below the button.
+8.	The *Upgrade Firmware* button should be active and “Found 1 device” is displayed below the button.
 	- If not, make sure dAISy is connected and you entered bootloader mode as described above.
 	- If that does not work, connect dAISy directly to your computer without a USB hub and try again.
 	
-8.	Press Upgrade Firmware.
+9.	Press Upgrade Firmware.
 	
 	The upgrade should only take a few seconds.
 	If the firmware upgrade fails with an error, make sure you use the correct firmware file.
 	After a failed firmware update, dAISy will usually start in bootloader mode after a power-cycle. Retry this procedure starting
 	at step 4.
 
-9.	After successful upgrade, dAISy should be available again.
+10.	After successful upgrade, dAISy should be available again.
 
 	In some cases you might need to disconnect and reconnect dAISy.
 
-10.	The version information in the debug menu should now read:
+11.	The version information in the debug menu should now read:
 
-	*dAISy USB v4.0x* followed by hardware information, e.g. *dAISy USB 3 (5503)*
+	*dAISy USB v4.xx* followed by hardware information, e.g. *dAISy USB 3 (5503)*
 
 If you bricked dAISy in the process of upgrading it, you can try to revive it following the instructions on [this page](./unbrick-daisy.md).
 	
