@@ -68,9 +68,11 @@ If you are currently running a firmware version older than 4.0, you will also ne
 **Upgrade procedure**
 
 1.  Verify that the firmware file is a plain text file. The filename should end with .txt. The file content should look similar to this:
-	> @8000
-    > 5F 14 21 83 82 93 86 27 09 24 92 83 86 27 82 93 
-    > 84 27 0A 20 F2 F0 7F 00 23 02 0B 3C B2 40 80 BB 
+	~~~~
+	@8000
+    5F 14 21 83 82 93 86 27 09 24 92 83 86 27 82 93 
+    84 27 0A 20 F2 F0 7F 00 23 02 0B 3C B2 40 80 BB 
+	~~~~
 	If the file is not plain text (e.g. has HTML formatting), download it again. Make sure to download the RAW file, not the Github web page.
 
 2.	Connect to dAISy with a serial terminal program, like for example Putty.
