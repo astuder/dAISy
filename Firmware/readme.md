@@ -67,7 +67,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 **Upgrade procedure**
 
-1.  Verify that the firmware file is a plain text file. The filename should end with .txt. The file content should look similar to this:
+1.  Verify that the firmware file is a plain text file. The filename must end with .txt and the content of the file should start with text similar to this:
 	~~~~
 	@8000
     5F 14 21 83 82 93 86 27 09 24 92 83 86 27 82 93 
