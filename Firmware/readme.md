@@ -1,16 +1,22 @@
 # dAISy USB Firmware Updates
 
-This folder contains firmware updates for dAISy receivers, also known as dAISy USB.
+This folder contains firmware updates for the *single channel* dAISy receivers, also known as [dAISy USB](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
 
 ## Firmware History
 
+* **4.14** December 23 2017
+  - Added smart channel hopping. This increases the number of received AIS messages by 40-60% compared to regular channel hopping.
+  - Added support for NMEA loop-through of input from AUX serial. The enables forwarding of NMEA data, e.g. from a GPS receiver, to the connected PC.
+  - Available only for [dAISy USB 3](https://www.tindie.com/products/astuder/daisy-ais-receiver/) (the ones sold on Tindie) and MSP430F5529 LaunchPad due to increased memory requirement.
+* **4.12** July 1 2017
+  - Minor optimization of radio configuration.
 * **4.11** January 24 2017
   - Fixed bug to make dAISy work again with Android. This bug was introduced in version 4.10.
   - Slowed down channel hopping to twice per second. This improves the number of received messages by up to 25%.
   - Added command & to retrieve device serial number while in receive mode
   - Added support for input from AUX serial when enabled. However there still is no output of the debug menu on AUX serial.
 * **4.08** May 30 2016
-  - Added native support for Si4467 radio IC (inside dAISy since mid-May 2016).
+  - Added native support for Si4467 radio IC.
   - Added output of current configuration to debug menu.
   - Updated radio configuration for minor performance improvements.
 * **4.07** March 13 2016
@@ -32,9 +38,9 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-This is the version [that I currently sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
+This is the version [that I sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
 Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary.
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_11.txt)* and select *save target as* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_14.txt)* and select *save target as* to download firmware.
 
 ![dAISy USB 3](../Pictures/dAISyUSB3.jpg)
 
@@ -55,7 +61,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
 For the tinkerers among us. Text on the back says "dAISyPack".
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_11.txt)* and select *save target as* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_14.txt)* and select *save target as* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
@@ -118,5 +124,7 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 If you bricked dAISy in the process of upgrading it, you can try to revive it following the instructions on [this page](./unbrick-daisy.md).
 	
-Please let me know if you run into any problems. Also don't hesitate to contact me if this all sounds too complicated,
-and you don't have a resident geek to ask for help. 
+Please let me know if you run into any problems. Also don't hesitate to contact me if this all sounds too complicated, you don't have a Windows machine,
+and/or don't have a resident geek to ask for help.
+
+I also offer to perform free firmware upgrades if you cover the shipping cost.
