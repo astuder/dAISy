@@ -2,6 +2,8 @@
 
 This folder contains firmware updates for the *single channel* dAISy receivers, also known as [dAISy USB](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
 
+DO NOT try to install this firmware on other dAISy devices. There are currently no updates for dAISy 2+ and dAISy HAT.
+
 ## Firmware History
 
 * **4.14** December 23 2017
