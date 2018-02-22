@@ -75,7 +75,9 @@ If you are currently running a firmware version older than 4.0, you will also ne
 
 **Upgrade procedure**
 
-1.  Verify that the firmware file is a plain text file. The filename must end with .txt and the content of the file should start with text similar to this:
+1.	Download the correct firmware file for your version of dAISy (see above). Save it in a folder path without Unicode characters, for example c:\dAISy\
+
+2.	Verify that the firmware file is a plain text file. The filename must end with .txt and the content of the file should start with text similar to this:
 	~~~~
 	@8000
     5F 14 21 83 82 93 86 27 09 24 92 83 86 27 82 93 
@@ -83,44 +85,44 @@ If you are currently running a firmware version older than 4.0, you will also ne
 	~~~~
 	If the file is not plain text (e.g. has HTML formatting), download it again. Make sure to download the RAW file, not the Github web page.
 
-2.	Connect to dAISy with a serial terminal program, like for example Putty.
-    - The serial connection parameters are: baud rate 38400, data bits 8, parity none, stop bits 1 (8n1), flow control none
+3.	Connect to dAISy with a serial terminal program, like for example Putty.
+	- The serial connection parameters are: baud rate 38400, data bits 8, parity none, stop bits 1 (8n1), flow control none
 	- Select or enter serial port. The serial port of dAISy can be found in the Windows Device Manger under Ports.
 	- If you are not familiar with terminal programs, see [this document](http://www.microsemi.com/document-portal/doc_view/130815-configuring-serial-terminal-emulation-programs) for detailed configuration steps.
 
-3.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
+4.	Put dAISy into boot loader mode by sending the follwing commands through the serial terminal:
 	- Press *ESC* to enter the debug menu.
 	- The menu will display the current firmware version on the first line. You can stop here if your dAISy already runs the latest firmware.
 	- Press *B* to start the boot loader.
 	
 	dAISy will now disable the serial port and is ready for the firmware update.
 
-4.	Close the terminal program.
+5.	Close the terminal program.
 
-5.	Start *BSL_USB_GUI.exe*.
+6.	Start *BSL_USB_GUI.exe*.
 
-6.	Press *Next*, accept agreement, press *Next*.
+7.	Press *Next*, accept agreement, press *Next*.
 
-7.	Choose option *Select Firmware* and browse to the firmware file provided.
+8.	Choose option *Select Firmware* and browse to the firmware file provided.
 	
 	**IMPORTANT**: *DO NOT* program dAISy with the LED and Echo examples, it will brick the device!
 
-8.	The *Upgrade Firmware* button should be active and “Found 1 device” is displayed below the button.
+9.	The *Upgrade Firmware* button should be active and “Found 1 device” is displayed below the button.
 	- If not, make sure dAISy is connected and you entered bootloader mode as described above.
 	- If that does not work, connect dAISy directly to your computer without a USB hub and try again.
 	
-9.	Press Upgrade Firmware.
+10.	Press Upgrade Firmware.
 	
 	The upgrade should only take a few seconds.
 	If the firmware upgrade fails with an error, make sure you use the correct firmware file.
 	After a failed firmware update, dAISy will usually start in bootloader mode after a power-cycle. Retry this procedure starting
-	at step 4.
+	at step 6.
 
-10.	After successful upgrade, dAISy should be available again.
+11.	After successful upgrade, dAISy should be available again.
 
 	In some cases you might need to disconnect and reconnect dAISy.
 
-11.	The version information in the debug menu should now read:
+12.	The version information in the debug menu should now read:
 
 	*dAISy USB v4.xx* followed by hardware information, e.g. *dAISy USB 3 (5503)*
 
