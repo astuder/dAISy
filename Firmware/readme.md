@@ -9,7 +9,7 @@ DO NOT try to install this firmware on other dAISy devices. There are currently 
 * **4.14** December 23 2017
   - Added smart channel hopping. This increases the number of received AIS messages by 40-60% compared to regular channel hopping.
   - Added support for NMEA loop-through of input from AUX serial. The enables forwarding of NMEA data, e.g. from a GPS receiver, to the connected PC.
-  - Available only for [dAISy USB 3](https://www.tindie.com/products/astuder/daisy-ais-receiver/) (the ones sold on Tindie) and MSP430F5529 LaunchPad due to increased memory requirement.
+  - Available only for [dAISy USB 3](https://shop.wegmatt.com/products/daisy-ais-receiver) (the ones sold in our store) and MSP430F5529 LaunchPad due to increased memory requirement.
 * **4.12** July 1 2017
   - Minor optimization of radio configuration.
 * **4.11** January 24 2017
@@ -40,7 +40,7 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-This is the version [that I sell on Tindie](https://www.tindie.com/products/astuder/daisy-ais-receiver/).
+This is the version [that I sell in my store](https://shop.wegmatt.com/products/daisy-ais-receiver).
 Note that the MSP430 MCU is in a QFN package. Text on the back says "dAISy USB 3". PCB color can vary.
 Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_14.txt)* and select *save target as* to download firmware.
 
