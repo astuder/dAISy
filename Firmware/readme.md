@@ -49,7 +49,7 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 This is the version was introduced in November 2021 and [is currently sold in my store](https://shop.wegmatt.com/products/daisy-ais-receiver).
 The first line of the debug menu says `dAISy USB 3 (5502)`
 The MSP430 MCU is in a QFN package with the marking `M430 F5502`. Text on the back of the PCB says `dAISy USB 3`. 
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw4_fw4_15.txt)* and select *save target as* to download firmware version `4.15`.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw4_fw4_15.txt)* and select *save link as* to download firmware version `4.15`.
 
 ![dAISy USB 3 MSP430F5502](../Pictures/dAISyUSB3-5502.jpg)
 
@@ -58,28 +58,28 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 This version was sold up to early 2021.
 The first line of the debug menu says `dAISy USB 3 (5503)`
 The MSP430 MCU is in a QFN package with the marking `M430 F5503`. Text on the back of the PCB says `dAISy USB 3`. PCB color and component arrangement varies, some being identical to the F5502 variant shown above.
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_15.txt)* and select *save target as* to download firmware version `4.15`.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_15.txt)* and select *save link as* to download firmware version `4.15`.
 
 ![dAISy USB 3 MSP430F5503](../Pictures/dAISyUSB3-5503.jpg)
 
 **hw2: dAISy USB 2 - square 1, MSP430F5508 MCU**
 
 This was the first version sold on Tindie (May, early June 2015). Note the MCU is in a QFP package (with leads). Text on the back says "dAISy USB 2".
-PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_11.txt)* and select *save target as* to download firmware version `4.11`.
+PCB color can vary. Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw2_fw4_11.txt)* and select *save link as* to download firmware version `4.11`.
 
 ![dAISy USB 2](../Pictures/dAISyUSB2.jpg)
 
 **hw1: dAISy USB - the stick, MSP430F5508 MCU**
 
 The first version, mostly sold during 2014. Text on the back says "dAISy USB". Only a few brave souls have these :)
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_11.txt)* and select *save target as* to download firmware version `4.11`.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw1_fw4_11.txt)* and select *save link as* to download firmware version `4.11`.
 
 ![dAISy USB 1](../Pictures/dAISyUSB1.jpg)
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
 For the tinkerers among us. Text on the back says "dAISyPack".
-Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_14.txt)* and select *save target as* to download firmware.
+Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_14.txt)* and select *save link as* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
 
