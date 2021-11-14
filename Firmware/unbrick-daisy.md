@@ -24,12 +24,12 @@ Follow the steps below to manually force dAISy into boot loader mode.
 
 2. Remove the two screws on the front and slide the circuit board out of the enclosure.
 
-3. Orient the circuit board so that the USB port is pointing to the left.
+3. Use a piece of jumper wire and stick one end into the pad marked with 3V3.
 
-4. Use a piece of wire and stick one end into the pad marked with 3V3 (3rd hole from left).
-
-5. With one hand, hold the other end of the wire to the left end of resistor R32 as shown below.
-![unbricking dAISy 3](../Pictures/un-bricking.jpg)
+5. Board Rev G and newer: With one hand, hold the other end of the wire to the right end of resistor R32 as shown below.
+![unbricking dAISy 3 Rev G and newer](../Pictures/un-bricking-revG.jpg). 
+Older board revisions: With one hand, hold the other end of the wire to the left end of resistor R32 as shown below.
+![unbricking dAISy 3 for older board revisions](../Pictures/un-bricking.jpg). 
 
 6. With the other hand, plug the USB cable back into the computer - you should hear the USB detect sound of Windows.
 
