@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "si4362BP")(type "Legacy")(uri "${KIPRJMOD}/si4362BP.lib")(options "")(descr ""))
+)
