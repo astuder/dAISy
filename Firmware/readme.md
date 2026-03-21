@@ -6,6 +6,9 @@ DO NOT try to install this firmware on other dAISy devices. There are currently 
 
 ## Firmware History
 
+* **4.16** June 26 2022
+  - Added checks during boot to detect and gracefully handle fabrication errors.
+  - Added information to debug menu if errors are detected during boot.
 * **4.15** November 6 2021
   - Added support for Si4362-C2A radio IC.
   - Added support for MSP430F5502 MCU (HW version 4). Note separate firmware files!
@@ -46,7 +49,7 @@ Devices sold after August 2015 or running firmware 4.02 and newer will display t
 
 **hw4: dAISy USB 3 - square 2.1, MSP430F5502 MCU**
 
-This is the version was introduced in November 2021 and [is currently sold in my store](https://shop.wegmatt.com/products/daisy-ais-receiver).
+This is the hardware version introduced in November 2021 and [is currently sold in my store](https://shop.wegmatt.com/products/daisy-ais-receiver).
 The first line of the debug menu says `dAISy USB 3 (5502)`
 The MSP430 MCU is in a QFN package with the marking `M430 F5502`. Text on the back of the PCB says `dAISy USB 3`. 
 Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw4_fw4_15.txt)* and select *save link as* to download firmware version `4.15`.
@@ -55,7 +58,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 
 **hw3: dAISy USB 3 - square 2, MSP430F5503 MCU**
 
-This version was sold up to early 2021.
+This hardware version was sold up to early 2021.
 The first line of the debug menu says `dAISy USB 3 (5503)`
 The MSP430 MCU is in a QFN package with the marking `M430 F5503`. Text on the back of the PCB says `dAISy USB 3`. PCB color and component arrangement varies, some being identical to the F5502 variant shown above.
 Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw3_fw4_15.txt)* and select *save link as* to download firmware version `4.15`.
@@ -78,7 +81,7 @@ Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_h
 
 **hw0: dAISyPack - BoosterPack for the MSP430F5529 LaunchPad**
 
-For the tinkerers among us. Text on the back says "dAISyPack".
+For the tinkerers among us. Text on the back says "dAISyPack". Hardware design file can be found *[here](../KiCad/dAISy%20BoosterPack)*.
 Right-click *[here](https://github.com/astuder/dAISy/raw/master/Firmware/Daisy_hw0_fw4_14.txt)* and select *save link as* to download firmware.
 
 ![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
