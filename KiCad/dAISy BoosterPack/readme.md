@@ -1,6 +1,6 @@
 Breakout board for the Si446x as MSP430 BoosterPack. 
 
-![dAISyPack](../Pictures/dAISyUSBBoosterPack.jpg)
+![dAISyPack](../../Pictures/dAISyUSBBoosterPack.jpg)
 
 Paired with a [TI MSP430F5529 LaunchPad](https://www.ti.com/tool/MSP-EXP430F5529LP), this board can also be used with the (closed source) [dAISy USB firmware](https://github.com/astuder/dAISy/tree/master/Firmware).
 
